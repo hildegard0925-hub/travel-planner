@@ -131,16 +131,16 @@ export default function TripDetail() {
 
       {/* 일정 헤더 */}
       <div style={{
-        padding: '12px 16px',
+        padding: '3px 16px',
+        marginBottom: 4,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
 
         position: 'sticky',
-        top: 'calc(var(--header-h) + 38px)',
+        top: 'calc(var(--header-h) + 42px)',
         zIndex: 4,
-        background: 'var(--surface)',
-        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg)',
       }}>
         <div>
           <div style={{ fontWeight: 500 }}>{format(dayDate, 'M월 d일 (EEE)', { locale: ko })}</div>
