@@ -104,6 +104,9 @@ export default function TripDetail() {
       {/* 일차 탭 */}
       <div style={{
         display: 'flex', overflowX: 'auto', padding: '5px 12px', gap: 8,
+        position: 'sticky',
+        top: 'var(--header-h)',
+        zIndex: 5,
         background: 'var(--surface)', borderBottom: '1px solid var(--border)',
         scrollbarWidth: 'none',
       }}>
@@ -127,7 +130,18 @@ export default function TripDetail() {
       </div>
 
       {/* 일정 헤더 */}
-      <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{
+        padding: '12px 16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+
+        position: 'sticky',
+        top: 'calc(var(--header-h) + 38px)',
+        zIndex: 4,
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
+      }}>
         <div>
           <div style={{ fontWeight: 500 }}>{format(dayDate, 'M월 d일 (EEE)', { locale: ko })}</div>
           {dayTotal > 0 && <div style={{ fontSize: 12, color: 'var(--text3)' }}>오늘 지출 {dayTotal.toLocaleString()}원</div>}
