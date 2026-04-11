@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <div>
       <div className="top-header">
-        <h1 style={{ fontWeight: 700 }}>여행 기록</h1>
+        <h1 style={{ fontWeight: 700 }}>Travel Planner</h1>
         <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
           onClick={() => setShowForm(true)}>
           + 새 여행
