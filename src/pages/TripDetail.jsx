@@ -101,13 +101,23 @@ export default function TripDetail() {
         </button>
       </div>
 
+      {/* sticky 묶음 시작 */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 'var(--header-h)',
+          zIndex: 5,
+          background: 'var(--bg)',
+        }}>
+
       {/* 일차 탭 */}
       <div style={{
-        display: 'flex', overflowX: 'auto', padding: '5px 12px', gap: 8,
-        position: 'sticky',
-        top: 'var(--header-h)',
-        zIndex: 5,
-        background: 'var(--surface)', borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        overflowX: 'auto',
+        padding: '5px 12px',
+        gap: 8,
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         scrollbarWidth: 'none',
       }}>
         {Array.from({ length: totalDays }, (_, i) => {
@@ -129,19 +139,15 @@ export default function TripDetail() {
         })}
       </div>
 
-      {/* 일정 헤더 */}
-      <div style={{
-        padding: '3px 16px',
-        marginBottom: 4,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-
-        position: 'sticky',
-        top: 'calc(var(--header-h) + 42px)',
-        zIndex: 4,
-        background: 'var(--bg)',
-      }}>
+        {/* 일정 헤더 */}
+        <div style={{
+          padding: '3px 16px',
+          marginBottom: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'var(--bg)',
+        }}>
         <div>
           <div style={{ fontWeight: 500 }}>{format(dayDate, 'M월 d일 (EEE)', { locale: ko })}</div>
           {dayTotal > 0 && <div style={{ fontSize: 12, color: 'var(--text3)' }}>오늘 지출 {dayTotal.toLocaleString()}원</div>}
@@ -149,6 +155,8 @@ export default function TripDetail() {
         <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
           onClick={() => setShowAdd(true)}>+ 추가</button>
       </div>
+      </div>
+      {/* sticky 묶음 끝 */}
 
       {/* 복사 알림 토스트 */}
       {copyNotice && (
