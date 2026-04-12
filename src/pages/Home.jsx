@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useTrips } from '../hooks/useTrips.js'
 import { format, differenceInDays } from 'date-fns'
 import { ko } from 'date-fns/locale'
+const isAdmin =
+  new URLSearchParams(window.location.search).get('admin') === '1'
 
 const CURRENCY_FLAG = {
   KRW: '🇰🇷',
@@ -26,7 +28,14 @@ export default function Home() {
       <div className="top-header">
         <h1 style={{ fontWeight: 700 }}>Travel Planner</h1>
         <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
-          onClick={() => setShowForm(true)}>
+          onClick={() => {
+            if (!isAdmin) {
+              alert('읽기 전용입니다.')
+              return
+            }
+            setShowForm(true)
+          }}
+        >
           + 새 여행
         </button>
       </div>
@@ -108,6 +117,10 @@ function NewTripModal({ onClose, onCreate }) {
 
   const submit = async () => {
     if (!form.title || !form.start_date || !form.end_date) return
+    if (!isAdmin) {
+      alert('읽기 전용입니다.')
+      return
+    }
     setSaving(true)
     await onCreate({
       title: form.title,
