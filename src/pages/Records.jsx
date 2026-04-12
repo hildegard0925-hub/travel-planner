@@ -20,6 +20,18 @@ export default function Records() {
   const { trip } = useTrip(tripId)
   const { records, byDay, loading, addRecord, updateRecord, deleteRecord, refresh } = useRecords(tripId)
   const [viewMode, setViewMode] = useState('timeline')
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const page = document.querySelector('.page')
+
+      if (page) {
+        page.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+      }
+    })
+  }, [viewMode])
   const [editItem, setEditItem] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -132,23 +144,33 @@ export default function Records() {
       </div>
 
       {records.length > 0 && (
-        <div style={{
-          position: 'sticky',
-          top: 'var(--header-h)',
-          zIndex: 5,
-
-          padding: '8px 14px',
-          background: 'var(--surface)',
-          borderBottom: '1px solid var(--border)',
-
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-          fontSize: 14,
-          color: 'var(--text2)',
-          whiteSpace: 'nowrap'
-        }}>
+        <div
+          onClick={() => {
+            const page = document.querySelector('.page')
+            if (page) {
+              page.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+              })
+            }
+          }}
+          style={{
+            position: 'sticky',
+            top: 'var(--header-h)',
+            zIndex: 5,
+            padding: '8px 14px',
+            background: 'var(--surface)',
+            borderBottom: '1px solid var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            fontSize: 14,
+            color: 'var(--text2)',
+            whiteSpace: 'nowrap',
+            cursor: 'pointer'
+          }}
+        >
           
           <span style={{ fontWeight: 500, flexShrink: 0 }}>
             🗓️ {safeDay + 1}일차{' '}

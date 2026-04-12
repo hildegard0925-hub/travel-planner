@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTrip, useTrips } from '../hooks/useTrips.js'
 import { useSchedules } from '../hooks/useSchedules.js'
@@ -37,6 +37,18 @@ export default function TripDetail() {
   useEffect(() => {
     if (focusDay !== null) setSelectedDay(Number(focusDay))
   }, [focusDay])
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const page = document.querySelector('.page')
+
+      if (page) {
+        page.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+      }
+    })
+  }, [selectedDay])
 
   if (tripLoading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>로딩 중...</div>
   if (!trip) return null
@@ -174,7 +186,9 @@ export default function TripDetail() {
       )}
 
       {/* 타임라인 */}
-      <div style={{ padding: '0 16px 16px' }}>
+      <div
+        style={{ padding: '0 16px 16px' }}
+      >
         {dayItems.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)', fontSize: 14 }}>
             이 날 일정이 없어요.<br />+ 추가를 눌러 일정을 만들어보세요.
