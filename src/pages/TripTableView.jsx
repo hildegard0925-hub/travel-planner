@@ -13,14 +13,14 @@ export default function TripTableView({
   const navigate = useNavigate()
 
   const DEFAULT_WIDTHS = {
-    date: 70,
+    date: 50,
     time: 110,
     title: 120,
-    description: 150,
+    description: 220,
     local: 100,
-    krw: 110,
-    payment: 80,
-    memo: 120
+    krw: 100,
+    payment: 100,
+    memo: 200
   }
 
   const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
