@@ -13,14 +13,12 @@ export default function TripTableView({
   const navigate = useNavigate()
 
   const DEFAULT_WIDTHS = {
-    date: 50,
+    date: 100,
     time: 110,
-    title: 120,
-    description: 220,
-    local: 100,
-    krw: 100,
-    payment: 100,
-    memo: 200
+    title: 250,
+    local: 130,
+    krw: 130,
+    payment: 120
   }
 
   const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
@@ -37,14 +35,6 @@ export default function TripTableView({
         window.removeEventListener('resize', handleResize)
       }
     }, [])
-
-  useEffect(() => {
-    const saved = localStorage.getItem('tripTableWidths')
-
-    if (saved) {
-      setColWidths(JSON.parse(saved))
-    }
-  }, [])
 
   const cellStyle = {
     border: '1px solid #ddd',
@@ -367,7 +357,6 @@ export default function TripTableView({
             <th
               style={{
                 ...headerStyle,
-                width: colWidths.description,
                 position: 'relative'
               }}
             >
@@ -459,7 +448,6 @@ export default function TripTableView({
             <th
               style={{
                 ...headerStyle,
-                width: colWidths.memo,
                 position: 'relative'
               }}
             >
@@ -487,7 +475,7 @@ export default function TripTableView({
             <tr
               key={item.id}
             >
-              <td style={{ ...centerCell, width: 70 }}>
+              <td style={centerCell}>
                 {format(
                     addDays(
                     new Date(trip.start_date),
@@ -498,7 +486,7 @@ export default function TripTableView({
                 )}
                 </td>
 
-              <td style={{ ...cellStyle, width: 110, textAlign: 'center' }}>
+              <td style={{ ...cellStyle, textAlign: 'center' }}>
                 {(item.start_time || item.schedule_time)
                   ? `${(item.start_time || item.schedule_time).slice(0, 5)}${
                       item.end_time

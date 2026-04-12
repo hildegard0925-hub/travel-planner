@@ -13,14 +13,14 @@ export default function TripTableView({
   const navigate = useNavigate()
 
   const DEFAULT_WIDTHS = {
-    date: 50,
-    time: 110,
-    title: 120,
-    description: 220,
-    local: 100,
-    krw: 100,
-    payment: 100,
-    memo: 200
+    date: 100,
+    time: 140,
+    title: 250,
+
+    local: 130,
+    krw: 130,
+    payment: 120,
+
   }
 
   const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
@@ -38,14 +38,6 @@ export default function TripTableView({
           window.removeEventListener('resize', handleResize)
         }
       }, [])
-
-  useEffect(() => {
-    const saved = localStorage.getItem('tripTableWidths')
-
-    if (saved) {
-      setColWidths(JSON.parse(saved))
-    }
-  }, [])
 
   useEffect(() => {
     const updateOffset = () => {
@@ -313,11 +305,11 @@ export default function TripTableView({
               <col style={{ width: colWidths.date }} />
               <col style={{ width: colWidths.time }} />
               <col style={{ width: colWidths.title }} />
-              <col style={{ width: colWidths.description }} />
+              <col />   // description
               <col style={{ width: colWidths.local }} />
               <col style={{ width: colWidths.krw }} />
               <col style={{ width: colWidths.payment }} />
-              <col style={{ width: colWidths.memo }} />
+              <col />   // memo
             </colgroup>
 
             <thead>
@@ -325,11 +317,11 @@ export default function TripTableView({
                 <th style={{ ...headerStyle, width: colWidths.date }}>일자</th>
                 <th style={{ ...headerStyle, width: colWidths.time }}>시간</th>
                 <th style={{ ...headerStyle, width: colWidths.title }}>일정</th>
-                <th style={{ ...headerStyle, width: colWidths.description }}>내용</th>
+                <th style={headerStyle}>내용</th>
                 <th style={{ ...headerStyle, width: colWidths.local }}>현지</th>
                 <th style={{ ...headerStyle, width: colWidths.krw }}>원화</th>
                 <th style={{ ...headerStyle, width: colWidths.payment }}>결제</th>
-                <th style={{ ...headerStyle, width: colWidths.memo }}>메모</th>
+                <th style={headerStyle}>메모</th>
               </tr>
             </thead>
           </table>
@@ -363,11 +355,11 @@ export default function TripTableView({
               <col style={{ width: colWidths.date }} />
               <col style={{ width: colWidths.time }} />
               <col style={{ width: colWidths.title }} />
-              <col style={{ width: colWidths.description }} />
+              <col />   // description
               <col style={{ width: colWidths.local }} />
               <col style={{ width: colWidths.krw }} />
               <col style={{ width: colWidths.payment }} />
-              <col style={{ width: colWidths.memo }} />
+              <col />   // memo
             </colgroup>
             <tbody>
 
