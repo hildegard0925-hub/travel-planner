@@ -9,7 +9,7 @@ import AddScheduleModal from '../components/AddScheduleModal.jsx'
 import TripTableView from './TripTableView.jsx'
 import { linkify } from '../utils/linkify'
 
-const CAT_EMOJI = { food: '🍜', transport: '🚇', shopping: '🛍️', activity: '📍', lodging: '🏨', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🚇', shopping: '🛍️', activity: '⭐', lodging: '🏨', etc: '📌' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '액티비티', lodging: '숙소', etc: '기타' }
 const METHOD_ICON = { 도보: '🚶', 지하철: '🚇', 버스: '🚌', 택시: '🚕', 자차: '🚗' }
 const PAYMENT_LABEL = { card: '카드', cash: '현금' }
