@@ -9,6 +9,8 @@ import RecordTableView from './RecordTableView.jsx'
 import PhotoViewer from '../components/PhotoViewer.jsx'
 import { deleteRecordPhoto } from '../services/storage.js'
 import { linkify } from '../utils/linkify'
+const isAdmin =
+  new URLSearchParams(window.location.search).get('admin') === '1'
 
 const CAT_EMOJI = { food: '🍜', transport: '🚇', shopping: '🛍️', activity: '⭐', lodging: '🏨', etc: '📌' }
 
@@ -228,6 +230,10 @@ export default function Records() {
                     onEdit={() => setEditItem(record)}
                     onUpdate={(id, vals) => updateRecord(id, vals)}
                     onDelete={async () => {
+                      if (!isAdmin) {
+                        alert('읽기 전용입니다.')
+                        return
+                      }
                       if (!confirm('이 기록을 삭제할까요?')) return
 
                       if (record.photo_url) {

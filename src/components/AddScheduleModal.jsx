@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 
+const isAdmin =
+  new URLSearchParams(window.location.search).get('admin') === '1'
+
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
   { value: 'transport', label: '🚇 이동' },
@@ -54,7 +57,10 @@ export default function AddScheduleModal({ trip, dayIndex, initial, onClose, onS
 
   const handleSave = async () => {
     if (!form.title) return
-
+    if (!isAdmin) {
+      alert('읽기 전용입니다.')
+      return
+    }
     setSaving(true)
 
     const { error } = await onSave({

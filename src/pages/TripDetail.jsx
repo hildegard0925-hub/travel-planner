@@ -8,6 +8,8 @@ import { ko } from 'date-fns/locale'
 import AddScheduleModal from '../components/AddScheduleModal.jsx'
 import TripTableView from './TripTableView.jsx'
 import { linkify } from '../utils/linkify'
+const isAdmin =
+  new URLSearchParams(window.location.search).get('admin') === '1'
 
 const CAT_EMOJI = { food: '🍜', transport: '🚇', shopping: '🛍️', activity: '⭐', lodging: '🏨', etc: '📌' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '액티비티', lodging: '숙소', etc: '기타' }
@@ -204,7 +206,14 @@ export default function TripDetail() {
               isLast={idx === dayItems.length - 1}
               onToggle={() => handleToggleDone(item)}
               onEdit={() => setEditItem(item)}
-              onDelete={() => deleteSchedule(item.id)}
+              onDelete={() => {
+                if (!isAdmin) {
+                  alert('읽기 전용입니다.')
+                  return
+                }
+
+                deleteSchedule(item.id)
+              }}
             />
           ))}
         </div>
@@ -259,6 +268,10 @@ export default function TripDetail() {
                 border: '1px solid #ffcdd2'
               }}
               onClick={async () => {
+                if (!isAdmin) {
+                  alert('읽기 전용입니다.')
+                  return
+                }
                 if (!confirm('이 여행을 삭제할까요?\n일정도 함께 삭제됩니다.')) return
 
                 const { error } = await deleteTrip(tripId)
