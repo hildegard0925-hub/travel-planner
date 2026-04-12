@@ -285,7 +285,7 @@ export default function TripTableView({
         <div style={{ padding: '4px 16px 16px', overflowX: 'auto' }}>
       <table
         style={{
-          width: '100%',
+          width: 'calc(100% - 4px)',
           borderCollapse: 'collapse',
           fontSize: 11,
           minWidth: isMobile ? 'auto' : 900,
