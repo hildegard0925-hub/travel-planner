@@ -122,7 +122,9 @@ export default function AddRecordModal({ trip, initial, onClose, onSave }) {
       const result = await onSave({
         ...form,
 
-        start_time: format(exifDate, 'HH:mm'),
+        start_time: exifDate
+          ? format(exifDate, 'HH:mm')
+          : form.start_time || null,
 
         actual_datetime: finalDatetime,
 

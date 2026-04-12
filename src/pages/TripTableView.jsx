@@ -25,6 +25,7 @@ export default function TripTableView({
 
   const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [headerOffset, setHeaderOffset] = useState(0)
 
     useEffect(() => {
         const handleResize = () => {
@@ -46,6 +47,24 @@ export default function TripTableView({
     }
   }, [])
 
+  useEffect(() => {
+    const updateOffset = () => {
+      const header = document.querySelector('.top-header')
+
+      if (header) {
+        setHeaderOffset(header.offsetHeight)
+      }
+    }
+
+    updateOffset()
+
+    window.addEventListener('resize', updateOffset)
+
+    return () => {
+      window.removeEventListener('resize', updateOffset)
+    }
+  }, [])
+
   const cellStyle = {
     border: '1px solid #ddd',
     padding: '4px 8px',
@@ -54,10 +73,32 @@ export default function TripTableView({
   const headerStyle = {
     ...cellStyle,
     background: '#f5f5f5',
-    position: 'sticky',
-    top: 0,
-    zIndex: 5,
     textAlign: 'center'
+  }
+  const centerCell = {
+  ...cellStyle,
+  textAlign: 'center'
+  }
+
+  const rightCell = {
+    ...cellStyle,
+    textAlign: 'right'
+  }
+
+  const leftCell = {
+    ...cellStyle,
+    textAlign: 'left'
+  }
+
+  const wrapCell = {
+    ...cellStyle,
+    whiteSpace: 'normal'
+  }
+
+  const wrapLeftCell = {
+    ...cellStyle,
+    whiteSpace: 'normal',
+    textAlign: 'left'
   }
 
   // 전체 일정 합치기 + 정렬
@@ -126,7 +167,120 @@ export default function TripTableView({
     (sum, s) => sum + (s.cost_krw || 0),
     0
   )
+  if (isMobile) {
+    return (
+      <div>
 
+        <div className="top-header">
+          <button
+            className="btn-ghost"
+            onClick={() => setViewMode('timeline')}
+          >
+            ← 타임라인
+          </button>
+
+          <h1>{trip.title}</h1>
+        </div>
+
+        <div
+          style={{
+            overflowX: 'auto',
+            padding: '4px 16px 16px'
+          }}
+        >
+
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: 11,
+              minWidth: 'max-content',
+              tableLayout: 'auto',
+              background: '#fff'
+            }}
+          >
+
+            <thead>
+              <tr>
+                <th style={headerStyle}>일자</th>
+                <th style={headerStyle}>시간</th>
+                <th style={headerStyle}>일정</th>
+                <th style={headerStyle}>내용</th>
+                <th style={headerStyle}>현지</th>
+                <th style={headerStyle}>원화</th>
+                <th style={headerStyle}>결제</th>
+                <th style={headerStyle}>메모</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {allSchedules.map(item => (
+                <tr key={item.id}>
+
+                  {/* 일자 */}
+                  <td style={centerCell}>
+                    {format(
+                      addDays(
+                        new Date(trip.start_date),
+                        item.day_index
+                      ),
+                      'M/d',
+                      { locale: ko }
+                    )}
+                  </td>
+
+                  {/* 시간 */}
+                  <td style={centerCell}>
+                    {item.start_time
+                      ? `${item.start_time.slice(0, 5)}${
+                          item.end_time
+                            ? `~${item.end_time.slice(0, 5)}`
+                            : ''
+                        }`
+                      : ''}
+                  </td>
+
+                  {/* 일정 */}
+                  <td style={leftCell}>
+                    {item.title}
+                  </td>
+
+                  {/* 내용 */}
+                  <td style={wrapLeftCell}>
+                    {item.description}
+                  </td>
+
+                  {/* 현지 */}
+                  <td style={rightCell}>
+                    {item.cost_local?.toLocaleString()}
+                  </td>
+
+                  {/* 원화 */}
+                  <td style={rightCell}>
+                    {item.cost_krw?.toLocaleString()}
+                  </td>
+
+                  {/* 결제 */}
+                  <td style={centerCell}>
+                    {item.payment_method}
+                  </td>
+
+                  {/* 메모 */}
+                  <td style={wrapLeftCell}>
+                    {linkify(item.memo)}
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+    )
+  }
   return (
     <div>
 
@@ -141,297 +295,175 @@ export default function TripTableView({
         <h1>{trip.title}</h1>
         </div>
 
-        <div style={{ padding: 16, overflowX: 'auto' }}>
-      
-    
-      <table
-        style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          fontSize: 11,
-          minWidth: isMobile ? 'auto' : 900,
-          background: '#fff',
-          tableLayout: isMobile ? 'auto' : 'fixed'
-        }}
-      >
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.date,
-            position: 'relative'
-          }}
-        >
-          일자
+        <div style={{ padding: '4px 16px 0' }}>
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'date')
-            }
+          {/* header table */}
+          <table
             style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
+              width: 'calc(100% - 4px)',
+              borderCollapse: 'collapse',
+              fontSize: 11,
+              minWidth: isMobile ? 'auto' : 900,
+              background: '#f5f5f5',
+              tableLayout: 'fixed',
             }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.time,
-            position: 'relative'
-          }}
-        >
-          시간
+          >
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'time')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.title,
-            position: 'relative'
-          }}
-        >
-          일정
+            <colgroup>
+              <col style={{ width: colWidths.date }} />
+              <col style={{ width: colWidths.time }} />
+              <col style={{ width: colWidths.title }} />
+              <col style={{ width: colWidths.description }} />
+              <col style={{ width: colWidths.local }} />
+              <col style={{ width: colWidths.krw }} />
+              <col style={{ width: colWidths.payment }} />
+              <col style={{ width: colWidths.memo }} />
+            </colgroup>
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'title')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.description,
-            position: 'relative'
-          }}
-        >
-          내용
+            <thead>
+              <tr>
+                <th style={{ ...headerStyle, width: colWidths.date }}>일자</th>
+                <th style={{ ...headerStyle, width: colWidths.time }}>시간</th>
+                <th style={{ ...headerStyle, width: colWidths.title }}>일정</th>
+                <th style={{ ...headerStyle, width: colWidths.description }}>내용</th>
+                <th style={{ ...headerStyle, width: colWidths.local }}>현지</th>
+                <th style={{ ...headerStyle, width: colWidths.krw }}>원화</th>
+                <th style={{ ...headerStyle, width: colWidths.payment }}>결제</th>
+                <th style={{ ...headerStyle, width: colWidths.memo }}>메모</th>
+              </tr>
+            </thead>
+          </table>
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'description')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.local,
-            position: 'relative'
-          }}
-        >
-          현지
+        </div>
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'local')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.krw,
-            position: 'relative'
-          }}
-        >
-          원화
 
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'krw')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.payment,
-            position: 'relative'
-          }}
-        >
-          결제
-
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'payment')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
-        <th
-          style={{
-            ...headerStyle,
-            width: colWidths.memo,
-            position: 'relative'
-          }}
-        >
-          메모
-
-          <div
-            onMouseDown={(e) =>
-              startResize(e, 'memo')
-            }
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              width: 6,
-              height: '100%',
-              cursor: 'col-resize'
-            }}
-          />
-        </th>
+        {/* body scroll 영역 */}
         
-        <tbody>
-          {allSchedules.map(item => (
-            <tr
-              key={item.id}
-              onDoubleClick={() => {
-                navigate(
-                  `/trip/${tripId}?day=${item.day_index}&focus=${item.id}`
-                )
-              }}
-              style={{
-                cursor: 'pointer'
-              }}
-            >
-              <td style={{ ...cellStyle, width: 70, textAlign: 'center' }}>
-                {format(
-                    addDays(
-                    new Date(trip.start_date),
-                    item.day_index
-                    ),
-                    'M/d',
-                    { locale: ko }
-                )}
-                </td>
+        <div
+          style={{
+            height: 'calc(100vh - var(--header-h) - var(--nav-h) - 45px)',
+            overflow: 'auto',
+            padding: '0 16px 16px',
+            overflowX: isMobile ? 'auto' : 'hidden'
+          }}
+        >
 
-              <td style={{ ...cellStyle, width: 110, textAlign: 'center' }}>
-                {item.start_time
-                  ? `${item.start_time.slice(0, 5)}${
-                      item.end_time
-                        ? `~${item.end_time.slice(0, 5)}`
-                        : ''
-                    }`
-                  : ''}
-              </td>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: 11,
+              minWidth: isMobile ? 'auto' : 900,
+              background: '#fff',
+              tableLayout: 'fixed'
+            }}
+          >
 
-              <td style={{ ...cellStyle, textAlign: 'left' }}>
-                {item.title}
-              </td>
+            <colgroup>
+              <col style={{ width: colWidths.date }} />
+              <col style={{ width: colWidths.time }} />
+              <col style={{ width: colWidths.title }} />
+              <col style={{ width: colWidths.description }} />
+              <col style={{ width: colWidths.local }} />
+              <col style={{ width: colWidths.krw }} />
+              <col style={{ width: colWidths.payment }} />
+              <col style={{ width: colWidths.memo }} />
+            </colgroup>
+            <tbody>
 
-              <td
-                style={{
-                  ...cellStyle,
-                  whiteSpace: isMobile ? 'normal' : 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                {item.description}
-              </td>
-              <td style={{ ...cellStyle, textAlign: 'right' }}>
-                {item.cost_local
-                  ? item.cost_local.toLocaleString()
-                  : ''}
-              </td>
+              {allSchedules.map(item => (
+                <tr
+                  key={item.id}
+                >
+                  <td style={{ ...cellStyle, width: colWidths.date, textAlign: 'center' }}>
+                    {format(
+                      addDays(
+                        new Date(trip.start_date),
+                        item.day_index
+                      ),
+                      'M/d',
+                      { locale: ko }
+                    )}
+                  </td>
 
-              <td style={{ ...cellStyle, textAlign: 'right' }}>
-                {item.cost_krw
-                  ? item.cost_krw.toLocaleString()
-                  : ''}
-              </td>
+                  <td style={{ ...cellStyle, width: colWidths.time, textAlign: 'center' }}>
+                    {item.start_time
+                      ? `${item.start_time.slice(0, 5)}${
+                          item.end_time
+                            ? `~${item.end_time.slice(0, 5)}`
+                            : ''
+                        }`
+                      : ''}
+                  </td>
 
-              <td style={{ ...cellStyle, textAlign: 'center' }}>{item.payment_method}</td>
+                  <td style={{ ...cellStyle, textAlign: 'left' }}>
+                    {item.title}
+                  </td>
 
-              <td style={{ ...cellStyle, textAlign: 'left' }}>
-                {linkify(item.memo)}
-                </td>
-            </tr>
-          ))}
+                  <td
+                    style={{
+                      ...cellStyle,
+                      whiteSpace: isMobile ? 'normal' : 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {item.description}
+                  </td>
 
-          <tr>
-            <td
-                colSpan={5}
-                style={{
+                  <td style={{ ...cellStyle, textAlign: 'right' }}>
+                    {item.cost_local
+                      ? item.cost_local.toLocaleString()
+                      : ''}
+                  </td>
+
+                  <td style={{ ...cellStyle, textAlign: 'right' }}>
+                    {item.cost_krw
+                      ? item.cost_krw.toLocaleString()
+                      : ''}
+                  </td>
+
+                  <td style={{ ...cellStyle, textAlign: 'center' }}>
+                    {item.payment_method}
+                  </td>
+
+                  <td style={{ ...cellStyle, textAlign: 'left' }}>
+                    {linkify(item.memo)}
+                  </td>
+
+                </tr>
+              ))}
+
+              <tr>
+                <td
+                  colSpan={5}
+                  style={{
                     ...cellStyle,
                     textAlign: 'right',
                     fontWeight: 600
-                }}
+                  }}
                 >
-              합계
-            </td>
+                  합계
+                </td>
 
-            <td style={{
-                ...cellStyle,
-                fontWeight: 600,
-                textAlign: 'right'
-                }}>
-              {totalKrw.toLocaleString()} 원
-            </td>
+                <td
+                  style={{
+                    ...cellStyle,
+                    fontWeight: 600,
+                    textAlign: 'right'
+                  }}
+                >
+                  {totalKrw.toLocaleString()} 원
+                </td>
 
-            <td colSpan={2}></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-   </div>
+                <td colSpan={2}></td>
+              </tr>
+
+            </tbody>
+          </table>
+
+        </div>
+        
+      </div>
   )
 }
