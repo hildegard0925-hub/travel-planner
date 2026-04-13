@@ -6,13 +6,13 @@ const isAdmin =
 
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
-  { value: 'transport', label: '🚇 이동' },
+  { value: 'transport', label: '🛣️ 이동' },
   { value: 'shopping', label: '🛍️ 쇼핑' },
   { value: 'activity', label: '⭐ 관광' },
-  { value: 'lodging', label: '🏨 숙소' },
+  { value: 'lodging', label: '💒 숙소' },
   { value: 'etc', label: '📌 기타' },
 ]
-const TRANSPORTS = ['도보', '지하철', '버스', '택시', '자차']
+const TRANSPORTS = ['도보', '지하철', '버스', '택시', '비행기', '자차']
 
 // 10분 단위 시간 목록 생성
 const TIME_OPTIONS = []
@@ -200,20 +200,56 @@ export default function AddScheduleModal({ trip, dayIndex, initial, onClose, onS
           {/* 이동 수단 */}
           <div className="form-group">
             <label className="form-label">이동 수단</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {TRANSPORTS.map(t => (
-                <button key={t} onClick={() => set('transport', form.transport === t ? '' : t)}
-                  style={{
-                    padding: '6px 12px', borderRadius: 999, fontSize: 12, cursor: 'pointer',
-                    background: form.transport === t ? 'var(--accent2)' : 'var(--bg2)',
-                    color: form.transport === t ? '#fff' : 'var(--text2)',
-                    border: 'none',
-                  }}>{t}</button>
-              ))}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: 6,
+                alignItems: 'center'
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 6,
+                  flexWrap: 'nowrap'
+                }}
+              >
+                {TRANSPORTS.map(t => (
+                  <button
+                    key={t}
+                    onClick={() => set('transport', form.transport === t ? '' : t)}
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      borderRadius: 999,
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      background: form.transport === t ? 'var(--accent2)' : 'var(--bg2)',
+                      color: form.transport === t ? '#fff' : 'var(--text2)',
+                      border: 'none',
+                      minWidth: 0
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
               {form.transport && (
-                <input type="number" className="form-input" placeholder="분" value={form.transport_minutes}
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="분"
+                  value={form.transport_minutes}
                   onChange={e => set('transport_minutes', e.target.value)}
-                  style={{ width: 70, padding: '4px 8px', fontSize: 13 }} />
+                  style={{
+                    width: 50,
+                    padding: '4px 6px',
+                    fontSize: 12
+                  }}
+                />
               )}
             </div>
           </div>
