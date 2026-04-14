@@ -12,7 +12,7 @@ import { linkify } from '../utils/linkify'
 const isAdmin =
   new URLSearchParams(window.location.search).get('admin') === '1'
 
-const CAT_EMOJI = { food: '🍜', transport: '🚇', shopping: '🛍️', activity: '⭐', lodging: '🏨', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '⭐', lodging: '💒', etc: '📌' }
 
 export default function Records() {
   const { tripId } = useParams()
