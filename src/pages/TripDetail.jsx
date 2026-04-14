@@ -8,8 +8,6 @@ import { ko } from 'date-fns/locale'
 import AddScheduleModal from '../components/AddScheduleModal.jsx'
 import TripTableView from './TripTableView.jsx'
 import { linkify } from '../utils/linkify'
-const isAdmin =
-  new URLSearchParams(window.location.search).get('admin') === '1'
 
 const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '⭐', lodging: '💒', etc: '📌' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '액티비티', lodging: '숙소', etc: '기타' }
@@ -101,7 +99,10 @@ export default function TripDetail() {
           <button className="btn-ghost" onClick={() => setViewMode('timeline')} style={{ fontSize: 12 }}>타임라인</button>
           <button className="btn-ghost" onClick={() => setViewMode('table')} style={{ fontSize: 12 }}>표</button>
         </div>
-        <button className="btn-ghost" onClick={() => navigate('/')}>←</button>
+        <button className="btn-ghost" onClick={() => {
+          const params = window.location.search
+          navigate(`/${params}`)
+        }}>←</button>
         <h1 style={{
           fontSize: 18,
           fontWeight: 600,
@@ -190,7 +191,11 @@ export default function TripDetail() {
         }}>
           {copyNotice.text}
           <span style={{ marginLeft: 8, cursor: 'pointer', opacity: .8 }}
-            onClick={() => navigate(`/trip/${tripId}/records`)}>→ 기록 보기</span>
+            onClick={() => {
+              const params = window.location.search
+              navigate(`/trip/${tripId}/records${params}`)
+            }}
+          >→ 기록 보기</span>
         </div>
       )}
 
@@ -214,11 +219,6 @@ export default function TripDetail() {
               onToggle={() => handleToggleDone(item)}
               onEdit={() => setEditItem(item)}
               onDelete={() => {
-                if (!isAdmin) {
-                  alert('읽기 전용입니다.')
-                  return
-                }
-
                 deleteSchedule(item.id)
               }}
             />
@@ -275,10 +275,6 @@ export default function TripDetail() {
                 border: '1px solid #ffcdd2'
               }}
               onClick={async () => {
-                if (!isAdmin) {
-                  alert('읽기 전용입니다.')
-                  return
-                }
                 if (!confirm('이 여행을 삭제할까요?\n일정도 함께 삭제됩니다.')) return
 
                 const { error } = await deleteTrip(tripId)
@@ -455,8 +451,9 @@ function ScheduleRow({
                   }}
                   onClick={(e) => {
                     e.stopPropagation()
+                    const params = window.location.search
                     navigate(
-                      `/trip/${trip.id}/map?day=${item.day_index}&lat=${item.lat}&lng=${item.lng}`
+                      `/trip/${trip.id}/map?day=${item.day_index}&lat=${item.lat}&lng=${item.lng}${params}`
                     )
                   }}
                 >

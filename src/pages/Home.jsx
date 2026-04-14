@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTrips } from '../hooks/useTrips.js'
 import { format, differenceInDays } from 'date-fns'
 import { ko } from 'date-fns/locale'
-const isAdmin =
-  new URLSearchParams(window.location.search).get('admin') === '1'
 
 const CURRENCY_FLAG = {
   KRW: '🇰🇷',
@@ -29,10 +27,6 @@ export default function Home() {
         <h1 style={{ fontWeight: 700 }}>Travel Planner</h1>
         <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
           onClick={() => {
-            if (!isAdmin) {
-              alert('읽기 전용입니다.')
-              return
-            }
             setShowForm(true)
           }}
         >
@@ -59,7 +53,10 @@ export default function Home() {
           return (
             <div key={trip.id} className="card"
               style={{ padding: '6px 16px 10px', cursor: 'pointer', transition: 'transform .12s' }}
-              onClick={() => navigate(`/trip/${trip.id}`)}
+              onClick={() => {
+                const params = window.location.search
+                navigate(`/trip/${trip.id}${params}`)
+              }}
               onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
               onMouseUp={e => e.currentTarget.style.transform = ''}
               onTouchStart={e => e.currentTarget.style.transform = 'scale(0.98)'}
