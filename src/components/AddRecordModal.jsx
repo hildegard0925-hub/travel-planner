@@ -8,9 +8,6 @@ import { uploadRecordPhoto } from '../services/storage.js'
 import { deleteRecordPhoto } from '../services/storage.js'
 import { supabase } from '../lib/supabase.js'
 
-const isAdmin =
-  new URLSearchParams(window.location.search).get('admin') === '1'
-
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
   { value: 'transport', label: '🛣️ 이동' },
@@ -111,10 +108,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave }) {
 
   const handleSave = async () => {
     if (!form.title) return
-    if (!isAdmin) {
-      alert('읽기 전용입니다.')
-      return
-    }
+
     setSaving(true)
 
     try {
