@@ -114,10 +114,7 @@ function NewTripModal({ onClose, onCreate }) {
 
   const submit = async () => {
     if (!form.title || !form.start_date || !form.end_date) return
-    if (!isAdmin) {
-      alert('읽기 전용입니다.')
-      return
-    }
+
     setSaving(true)
     await onCreate({
       title: form.title,
