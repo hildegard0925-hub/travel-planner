@@ -125,7 +125,9 @@ export default function AddRecordModal({ trip, initial, onClose, onSave }) {
 
         start_time: exifDate
           ? format(exifDate, 'HH:mm')
-          : form.start_time || null,
+          : (form.start_time === '' || form.start_time == null
+            ? initial?.start_time
+            : form.start_time),
 
         actual_datetime: finalDatetime,
 
