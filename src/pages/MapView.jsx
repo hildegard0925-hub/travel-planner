@@ -52,21 +52,6 @@ export default function MapView() {
   }, [focusLat, focusLng, schedules])
   const [selectedItem, setSelectedItem] = useState(null)
 
-  useEffect(() => {
-    if (!isValidFocus) return
-    if (displayItems.length === 0) return
-
-    const found = displayItems.find(
-      s =>
-        String(s.lat) === String(focusLat) &&
-        String(s.lng) === String(focusLng)
-    )
-
-    if (found) {
-      setSelectedItem(found)
-    }
-  }, [displayItems, focusLat, focusLng])
-
   if (!trip) return null
 
   const totalDays = Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
@@ -84,6 +69,21 @@ export default function MapView() {
     !isNaN(Number(focusLat)) &&
     !isNaN(Number(focusLng))
 
+  useEffect(() => {
+      if (!isValidFocus) return
+      if (displayItems.length === 0) return
+
+      const found = displayItems.find(
+        s =>
+          String(s.lat) === String(focusLat) &&
+          String(s.lng) === String(focusLng)
+      )
+
+      if (found) {
+        setSelectedItem(found)
+      }
+    }, [displayItems, focusLat, focusLng])
+
   const defaultCenter =
     isValidFocus
       ? {
@@ -99,6 +99,8 @@ export default function MapView() {
           lat: 35.1796,
           lng: 129.0756,
         }
+
+    
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
