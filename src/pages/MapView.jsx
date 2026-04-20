@@ -37,19 +37,7 @@ export default function MapView() {
       setSelectedDay(Number(focusDay))
     }
   }, [focusDay])
-  useEffect(() => {
-    if (focusLat && focusLng) {
-      const found = schedules.find(
-        s =>
-          String(s.lat) === String(focusLat) &&
-          String(s.lng) === String(focusLng)
-      )
 
-      if (found && selectedItem?.id !== found.id) {
-        setSelectedItem(found)
-      }
-    }
-  }, [focusLat, focusLng, schedules])
   const [selectedItem, setSelectedItem] = useState(null)
 
   if (!trip) return null
