@@ -37,7 +37,19 @@ export default function MapView() {
       setSelectedDay(Number(focusDay))
     }
   }, [focusDay])
+  useEffect(() => {
+    if (focusLat && focusLng) {
+      const found = schedules.find(
+        s =>
+          String(s.lat) === String(focusLat) &&
+          String(s.lng) === String(focusLng)
+      )
 
+      if (found) {
+        setSelectedItem(found)
+      }
+    }
+  }, [focusLat, focusLng, schedules])
   const [selectedItem, setSelectedItem] = useState(null)
 
   if (!trip) return null
@@ -57,21 +69,6 @@ export default function MapView() {
     !isNaN(Number(focusLat)) &&
     !isNaN(Number(focusLng))
 
-  useEffect(() => {
-      if (!isValidFocus) return
-      if (displayItems.length === 0) return
-
-      const found = displayItems.find(
-        s =>
-          String(s.lat) === String(focusLat) &&
-          String(s.lng) === String(focusLng)
-      )
-
-      if (found && selectedItem?.id !== found.id) {
-        setSelectedItem(found)
-      }
-    }, [displayItems, focusLat, focusLng, isValidFocus])
-
   const defaultCenter =
     isValidFocus
       ? {
@@ -87,8 +84,6 @@ export default function MapView() {
           lat: 35.1796,
           lng: 129.0756,
         }
-
-    
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
@@ -144,8 +139,7 @@ export default function MapView() {
           </div>
         )}
         <Map
-          key={`${defaultCenter.lat}-${defaultCenter.lng}`}
-          center={defaultCenter}
+          defaultCenter={defaultCenter}
           defaultZoom={14}
           mapId="travel-planner-map"
           style={{ width: '100%', height: '100%' }}
