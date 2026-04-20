@@ -70,7 +70,7 @@ export default function MapView() {
       if (found && selectedItem?.id !== found.id) {
         setSelectedItem(found)
       }
-    }, [displayItems, focusLat, focusLng, isValidFocus, selectedItem])
+    }, [displayItems, focusLat, focusLng, isValidFocus])
 
   const defaultCenter =
     isValidFocus
