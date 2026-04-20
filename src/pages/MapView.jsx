@@ -63,12 +63,27 @@ export default function MapView() {
       !isNaN(Number(s.lng))
     )
 
+  const isValidFocus =
+    focusLat !== null &&
+    focusLng !== null &&
+    !isNaN(Number(focusLat)) &&
+    !isNaN(Number(focusLng))
+
   const defaultCenter =
-    focusLat && focusLng
-      ? { lat: Number(focusLat), lng: Number(focusLng) }
+    isValidFocus
+      ? {
+          lat: Number(focusLat),
+          lng: Number(focusLng),
+        }
       : displayItems.length > 0
-        ? { lat: displayItems[0].lat, lng: displayItems[0].lng }
-        : { lat: 33.5902, lng: 130.4017 }
+        ? {
+            lat: Number(displayItems[0].lat),
+            lng: Number(displayItems[0].lng),
+          }
+        : {
+          lat: 35.1796,
+          lng: 129.0756,
+        }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
