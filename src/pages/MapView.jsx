@@ -56,7 +56,12 @@ export default function MapView() {
 
   const totalDays = Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
   const displayItems = (selectedDay === null ? schedules : (byDay[selectedDay] || []))
-    .filter(s => s.lat && s.lng)
+    .filter(s =>
+      s.lat !== null &&
+      s.lng !== null &&
+      !isNaN(Number(s.lat)) &&
+      !isNaN(Number(s.lng))
+    )
 
   const defaultCenter =
     focusLat && focusLng
@@ -141,17 +146,19 @@ export default function MapView() {
               }} />
             </AdvancedMarker>
           )}
-          <Polyline
-            path={displayItems.map(item => ({
-              lat: item.lat,
-              lng: item.lng,
-            }))}
-            options={{
-              strokeColor: '#2a6dd4',
-              strokeOpacity: 0.8,
-              strokeWeight: 4,
-            }}
-          />
+          {displayItems.length > 1 && (
+            <Polyline
+              path={displayItems.map(item => ({
+                lat: item.lat,
+                lng: item.lng,
+              }))}
+              options={{
+                strokeColor: '#2a6dd4',
+                strokeOpacity: 0.8,
+                strokeWeight: 4,
+              }}
+            />
+          )}
           <MoveToMyLocation
             position={position}
             watching={watching}
@@ -193,7 +200,8 @@ export default function MapView() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontWeight: 500 }}>{selectedItem.title}</div>
+                
+                <div style={{ fontWeight: 500 }}>{displayItems.findIndex(i => i.id === selectedItem.id) + 1}번 {selectedItem.title}</div>
                 {selectedItem.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selectedItem.address}</div>}
                 {selectedItem.start_time && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 0 }}>{selectedItem.start_time?.slice(0, 5)}</div>}
               </div>
@@ -226,8 +234,8 @@ function offsetPosition(items, item, index) {
   const sameIndex = sameLocationItems.findIndex(i => i.id === item.id)
 
   return {
-    lat: item.lat + offset * sameIndex,
-    lng: item.lng + offset * sameIndex,
+    lat: Number(item.lat) + offset * sameIndex,
+    lng: Number(item.lng) + offset * sameIndex,
   }
 }
 function MoveToMyLocation({ position, watching }) {
