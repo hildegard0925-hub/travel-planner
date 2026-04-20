@@ -139,7 +139,8 @@ export default function MapView() {
           </div>
         )}
         <Map
-          defaultCenter={defaultCenter}
+          key={`${defaultCenter.lat}-${defaultCenter.lng}`}
+          center={defaultCenter}
           defaultZoom={14}
           mapId="travel-planner-map"
           style={{ width: '100%', height: '100%' }}
