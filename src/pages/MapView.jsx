@@ -45,7 +45,7 @@ export default function MapView() {
           String(s.lng) === String(focusLng)
       )
 
-      if (found) {
+      if (found && selectedItem?.id !== found.id) {
         setSelectedItem(found)
       }
     }
@@ -79,7 +79,7 @@ export default function MapView() {
           String(s.lng) === String(focusLng)
       )
 
-      if (found) {
+      if (found && selectedItem?.id !== found.id) {
         setSelectedItem(found)
       }
     }, [displayItems, focusLat, focusLng])
