@@ -5,7 +5,7 @@ const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
   { value: 'transport', label: '🛣️ 이동' },
   { value: 'shopping', label: '🛍️ 쇼핑' },
-  { value: 'activity', label: '🎠 관광' },
+  { value: 'activity', label: '🧭 관광' },
   { value: 'lodging', label: '💒 숙소' },
   { value: 'etc', label: '📌 기타' },
 ]

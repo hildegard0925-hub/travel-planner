@@ -11,7 +11,7 @@ import { deleteRecordPhoto } from '../services/storage.js'
 import { linkify } from '../utils/linkify'
 import { useLocation } from 'react-router-dom'
 
-const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🎠', lodging: '💒', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
 
 export default function Records() {
   const { tripId } = useParams()

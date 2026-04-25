@@ -4,7 +4,7 @@ import { useRecords } from '../hooks/useRecords.js'
 import { addDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
-const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🎠', lodging: '💒', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '관광', lodging: '숙소', etc: '기타' }
 
 export default function CostSummary() {
