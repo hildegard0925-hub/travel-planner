@@ -81,7 +81,16 @@ export async function recalculateAllCosts(tripId, newRate) {
     if (error || !data) return
 
     for (const item of data) {
-      const newKrw = Math.round((item.cost_local || 0) * newRate)
+      if (
+        item.cost_local === null ||
+        item.cost_local === undefined ||
+        item.cost_local === 0
+      ) {
+        continue
+      }
+
+      const newKrw =
+        Math.round(item.cost_local * newRate)
 
       await supabase
         .from('schedules')

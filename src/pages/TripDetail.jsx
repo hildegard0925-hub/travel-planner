@@ -294,9 +294,8 @@ export default function TripDetail() {
         trip={trip}
         onClose={() => setShowEditTrip(false)}
         onSave={async (values) => {
-          await updateTrip(tripId, values)
-          window.location.reload()   // 이 줄 추가
           setShowEditTrip(false)
+          await updateTrip(tripId, values)
         }}
       />
     )}

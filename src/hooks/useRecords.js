@@ -145,17 +145,20 @@ export async function recalculateAllRecordCosts(
   if (error || !data) return
 
   for (const item of data) {
+    if (
+      item.cost_local === null ||
+      item.cost_local === undefined ||
+      item.cost_local === 0
+    ) {
+      continue
+    }
+
     const newKrw =
-      Math.round(
-        (item.cost_local || 0) *
-        newRate
-      )
+      Math.round(item.cost_local * newRate)
 
     await supabase
       .from('records')
-      .update({
-        cost_krw: newKrw
-      })
+      .update({ cost_krw: newKrw })
       .eq('id', item.id)
   }
 }
