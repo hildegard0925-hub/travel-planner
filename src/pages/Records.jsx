@@ -27,16 +27,6 @@ export default function Records() {
   const [showAdd, setShowAdd] = useState(false)
 
     useEffect(() => {
-      const page = document.querySelector('.page')
-
-      if (page) {
-        page.scrollTo({
-          top: 0
-        })
-      }
-    }, [location.key])
-
-    useEffect(() => {
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach(entry => {
