@@ -16,7 +16,6 @@ const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', act
 export default function Records() {
   const { tripId } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
   const [currentDay, setCurrentDay] = useState(0)
   const dayRefs = useRef([])
   const { trip } = useTrip(tripId)
@@ -25,6 +24,30 @@ export default function Records() {
 
   const [editItem, setEditItem] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
+
+    // 마운트 시: 저장된 위치 복원 or 맨 위로
+    useEffect(() => {
+      const page = document.querySelector('.page')
+      if (!page) return
+
+      const saved = sessionStorage.getItem(`scroll_records_${tripId}`)
+      if (saved !== null) {
+        page.scrollTo({ top: Number(saved) })
+        sessionStorage.removeItem(`scroll_records_${tripId}`)
+      } else {
+        page.scrollTo({ top: 0 })
+      }
+    }, []) // ← 마운트 1회만
+
+    // 언마운트 시: 현재 스크롤 위치 저장
+    useEffect(() => {
+      return () => {
+        const page = document.querySelector('.page')
+        if (page) {
+          sessionStorage.setItem(`scroll_records_${tripId}`, page.scrollTop)
+        }
+      }
+    }, [tripId])
 
     useEffect(() => {
       const observer = new IntersectionObserver(
