@@ -254,7 +254,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
               ))}
               {form.rating && (
                 <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 6 }}>
-                  {['', '최악', '다신 안감', '보통', '괜찮음', '최고!'][form.rating]}
+                  {['', '최악', '별로', '보통', '좋음', '최고!'][form.rating]}
                 </span>
               )}
             </div>
