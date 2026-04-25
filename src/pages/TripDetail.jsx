@@ -295,7 +295,9 @@ export default function TripDetail() {
         onClose={() => setShowEditTrip(false)}
         onSave={async (values) => {
           setShowEditTrip(false)
+
           await updateTrip(tripId, values)
+
         }}
       />
     )}

@@ -32,6 +32,16 @@ export default function Records() {
       }
     })
   }, [viewMode])
+
+  useEffect(() => {
+    const page = document.querySelector('.page')
+
+    if (page) {
+      page.scrollTo({
+        top: 0
+      })
+    }
+  }, [])
   const [editItem, setEditItem] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
 
