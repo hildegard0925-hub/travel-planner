@@ -86,10 +86,10 @@ export default function Records() {
         {editItem && (
           <AddRecordModal trip={trip} initial={editItem}
             onClose={() => setEditItem(null)}
+            onRefresh={refresh}                           // ← 추가
             onSave={async (v) => {
               const r = await updateRecord(editItem.id, v)
-              if (!r.error) { await refresh(); setEditItem(null) }
-              return r
+              return r                                    // 닫기/refresh는 AddRecordModal이 처리
             }}
           />
         )}
@@ -276,10 +276,10 @@ export default function Records() {
       {editItem && (
         <AddRecordModal trip={trip} initial={editItem}
           onClose={() => setEditItem(null)}
+          onRefresh={refresh}                           // ← 추가
           onSave={async (v) => {
             const r = await updateRecord(editItem.id, v)
-            if (!r.error) { await refresh(); setEditItem(null) }
-            return r
+            return r                                    // 닫기/refresh는 AddRecordModal이 처리
           }}
         />
       )}

@@ -17,7 +17,7 @@ const CATEGORIES = [
   { value: 'etc', label: '📌 기타' },
 ]
 
-export default function AddRecordModal({ trip, initial, onClose, onSave }) {
+export default function AddRecordModal({ trip, initial, onClose, onSave, onRefresh }) {
   const [form, setForm] = useState({
     title: initial?.title ?? '',
     category: initial?.category ?? 'food',
@@ -195,8 +195,8 @@ export default function AddRecordModal({ trip, initial, onClose, onSave }) {
           .eq('id', savedRecord.id)
       }
 
+      if (onRefresh) await onRefresh()  // 데이터만 새로 불러오기
       onClose()
-      window.location.reload()
     } catch (err) {
       console.error(err)
       alert('저장 중 오류가 발생했습니다.')
