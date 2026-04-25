@@ -383,6 +383,11 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
               {record.photo_url && !expanded && (
                 <span style={{ fontSize: 11, flexShrink: 0 }}>📷</span>
               )}
+              {record.rating && (
+                <span style={{ fontSize: 11, flexShrink: 0, color: 'var(--text3)' }}>
+                  {'⭐'.repeat(record.rating)}
+                </span>
+              )}
             </div>
 
             {/* 둘째 줄: 주소 (바로 아래, 여백 없이) */}

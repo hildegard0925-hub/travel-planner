@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTrips } from '../hooks/useTrips.js'
 import { format, differenceInDays } from 'date-fns'
@@ -19,7 +19,28 @@ const CURRENCY_FLAG = {
 export default function Home() {
   const { trips, loading, createTrip } = useTrips()
   const [showForm, setShowForm] = useState(false)
+  const [avgRatings, setAvgRatings] = useState({})
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (trips.length === 0) return
+    import('../lib/supabase.js').then(({ supabase }) => {
+      supabase.from('records').select('trip_id, rating').not('rating', 'is', null)
+        .then(({ data }) => {
+          if (!data) return
+          const map = {}
+          data.forEach(r => {
+            if (!map[r.trip_id]) map[r.trip_id] = []
+            map[r.trip_id].push(r.rating)
+          })
+          const avgs = {}
+          Object.entries(map).forEach(([id, ratings]) => {
+            avgs[id] = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+          })
+          setAvgRatings(avgs)
+        })
+    })
+  }, [trips])
 
   return (
     <div>
@@ -83,6 +104,7 @@ export default function Home() {
                 <span>📅 {format(new Date(trip.start_date), 'M.d', { locale: ko })} ~ {format(new Date(trip.end_date), 'M.d', { locale: ko })}</span>
                 <span>🌙 {nights}박 {nights + 1}일</span>
                 {trip.exchange_rate && <span>💱 {trip.exchange_rate}원/{trip.currency}</span>}
+                {avgRatings[trip.id] && <span>⭐ {avgRatings[trip.id]}</span>}
               </div>
 
               {trip.budget_krw > 0 && (

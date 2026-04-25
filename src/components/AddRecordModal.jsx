@@ -30,6 +30,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     photo_url: initial?.photo_url ?? '',
     actual_datetime: initial?.actual_datetime ?? null,
     day_index: initial?.day_index ?? 0,
+    rating: initial?.rating ?? null,
   })
 
   // 수정 모달: 기존 사진을 초기값으로 바로 세팅
@@ -236,10 +237,32 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
             </div>
           </div>
 
+          {/* 별점 */}
+          <div className="form-group">
+            <label className="form-label">별점 (선택)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <button
+                  key={n}
+                  onClick={() => set('rating', form.rating === n ? null : n)}
+                  style={{
+                    fontSize: 24, background: 'none', border: 'none',
+                    cursor: 'pointer', padding: '2px 3px',
+                    opacity: form.rating >= n ? 1 : 0.2,
+                  }}
+                >⭐</button>
+              ))}
+              {form.rating && (
+                <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 6 }}>
+                  {['', '최악', '다신 안감', '보통', '괜찮음', '최고!'][form.rating]}
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* 사진 */}
           <div className="form-group">
             <label className="form-label">사진 (1장)</label>
-            <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
 
             {photoPreview ? (
               <div style={{ position: 'relative' }}>
