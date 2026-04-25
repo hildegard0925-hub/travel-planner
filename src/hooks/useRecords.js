@@ -132,3 +132,30 @@ function byDayDate(a, b) {
   const db = b.actual_datetime ? new Date(b.actual_datetime) : new Date(b.created_at)
   return da - db
 }
+
+export async function recalculateAllRecordCosts(
+  tripId,
+  newRate
+) {
+  const { data, error } = await supabase
+    .from('records')
+    .select('*')
+    .eq('trip_id', tripId)
+
+  if (error || !data) return
+
+  for (const item of data) {
+    const newKrw =
+      Math.round(
+        (item.cost_local || 0) *
+        newRate
+      )
+
+    await supabase
+      .from('records')
+      .update({
+        cost_krw: newKrw
+      })
+      .eq('id', item.id)
+  }
+}

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { recalculateAllCosts } from './useSchedules.js'
 import { deleteRecordPhoto } from '../services/storage.js'
+import {
+  recalculateAllRecordCosts
+} from './useRecords.js'
 
 export function useTrips() {
   const [trips, setTrips] = useState([])
@@ -66,6 +69,11 @@ export function useTrips() {
     // 환율 변경 시 비용 재계산
     if (cleanValues.exchange_rate) {
       await recalculateAllCosts(
+        id,
+        cleanValues.exchange_rate
+      )
+
+      await recalculateAllRecordCosts(
         id,
         cleanValues.exchange_rate
       )
