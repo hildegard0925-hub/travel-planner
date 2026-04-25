@@ -34,7 +34,7 @@ export default function Records() {
           top: 0
         })
       }
-    }, [location.pathname])
+    }, [location.key])
 
     useEffect(() => {
       const observer = new IntersectionObserver(
