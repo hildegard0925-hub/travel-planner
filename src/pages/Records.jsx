@@ -9,41 +9,32 @@ import RecordTableView from './RecordTableView.jsx'
 import PhotoViewer from '../components/PhotoViewer.jsx'
 import { deleteRecordPhoto } from '../services/storage.js'
 import { linkify } from '../utils/linkify'
+import { useLocation } from 'react-router-dom'
 
 const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '⭐', lodging: '💒', etc: '📌' }
 
 export default function Records() {
   const { tripId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [currentDay, setCurrentDay] = useState(0)
   const dayRefs = useRef([])
   const { trip } = useTrip(tripId)
   const { records, byDay, loading, addRecord, updateRecord, deleteRecord, refresh } = useRecords(tripId)
   const [viewMode, setViewMode] = useState('timeline')
-  useEffect(() => {
-    requestAnimationFrame(() => {
+
+  const [editItem, setEditItem] = useState(null)
+  const [showAdd, setShowAdd] = useState(false)
+
+    useEffect(() => {
       const page = document.querySelector('.page')
 
       if (page) {
         page.scrollTo({
-          top: 0,
-          behavior: 'smooth'
+          top: 0
         })
       }
-    })
-  }, [viewMode])
-
-  useEffect(() => {
-    const page = document.querySelector('.page')
-
-    if (page) {
-      page.scrollTo({
-        top: 0
-      })
-    }
-  }, [])
-  const [editItem, setEditItem] = useState(null)
-  const [showAdd, setShowAdd] = useState(false)
+    }, [location.pathname])
 
     useEffect(() => {
       const observer = new IntersectionObserver(
