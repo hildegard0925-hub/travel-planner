@@ -226,7 +226,7 @@ export default function MapView() {
           
           {/* 사진 핀 (기록) */}
           {(layer === 'all' || layer === 'record') && photoRecords.map((record, idx) => {
-            const pos = offsetPosition(photoRecords, record, idx, 0.00035)
+            const pos = offsetPosition(photoRecords, record, idx, 0.0005)
 
             return (
               <AdvancedMarker
