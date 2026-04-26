@@ -287,7 +287,14 @@ export default function MapView() {
                 {selectedItem.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selectedItem.address}</div>}
                 {selectedItem.start_time && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 0 }}>{selectedItem.start_time?.slice(0, 5)}</div>}
               </div>
-              <button onClick={() => setSelectedItem(null)} style={{ fontSize: 18, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {selectedItem.photo_url && (
+                  <button onClick={() => setFullPhoto(selectedItem.photo_url)}
+                    style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>📷</button>
+                )}
+                <button onClick={() => setSelectedItem(null)}
+                  style={{ fontSize: 18, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+              </div>
             </div>
             
           </div>
