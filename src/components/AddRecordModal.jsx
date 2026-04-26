@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { readPhotoDate } from '../utils/exif.js'
 import { compressImage } from '../utils/imageUtils'
-import { extractAmountsFromReceipt, cancelOCR } from '../utils/ocr.js'
+
 import { uploadRecordPhoto } from '../services/storage.js'
 import { deleteRecordPhoto } from '../services/storage.js'
 import { supabase } from '../lib/supabase.js'
@@ -17,10 +17,23 @@ const CATEGORIES = [
   { value: 'etc', label: '📌 기타' },
 ]
 
+// 시간 선택 옵션 (30분 단위)
+const TIME_OPTIONS = []
+
+for (let h = 0; h < 24; h++) {
+  for (let m = 0; m < 60; m += 30) {
+    const hh = String(h).padStart(2, '0')
+    const mm = String(m).padStart(2, '0')
+    TIME_OPTIONS.push(`${hh}:${mm}`)
+  }
+}
+
 export default function AddRecordModal({ trip, initial, onClose, onSave, onRefresh }) {
   const [form, setForm] = useState({
     title: initial?.title ?? '',
     category: initial?.category ?? 'food',
+    start_time: initial?.start_time?.slice(0, 5) ?? '',
+    end_time: initial?.end_time?.slice(0, 5) ?? '',
     description: initial?.description ?? '',
     address: initial?.address ?? '',
     cost_local: initial?.cost_local ?? '',
@@ -41,13 +54,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
   )
   const [saving, setSaving] = useState(false)
 
-  // OCR 상태
-  const [ocrState, setOcrState] = useState('idle')
-  const [ocrProgress, setOcrProgress] = useState(0)
-  const [ocrAmounts, setOcrAmounts] = useState([])
-
   const photoInputRef = useRef()
-  const receiptInputRef = useRef()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   // 사진 선택 → 미리보기 + EXIF 읽기
@@ -73,31 +80,6 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     set('actual_datetime', date.toISOString())
     set('start_time', format(date, 'HH:mm'))
     set('time_source', 'photo')
-  }
-
-  // 영수증 OCR
-  const handleReceiptOCR = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setOcrState('loading')
-    setOcrProgress(0)
-    try {
-      const { text, amounts } = await extractAmountsFromReceipt(file, setOcrProgress)
-      setOcrAmounts(amounts)
-      setOcrState('done')
-    } catch (err) {
-      console.error('OCR 실패:', err)
-      setOcrState('idle')
-      alert('OCR 처리 중 오류가 발생했습니다.')
-    }
-  }
-
-  const selectOcrAmount = (amount) => {
-    set('cost_krw', amount)
-    if (trip.exchange_rate && trip.exchange_rate > 0) {
-      set('cost_local', Math.round(amount / trip.exchange_rate))
-    }
-    setOcrState('idle')
   }
 
   const handleCostLocal = (v) => {
@@ -129,6 +111,11 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
           : (form.start_time === '' || form.start_time == null
             ? initial?.start_time
             : form.start_time),
+
+        end_time:
+          form.end_time === '' || form.end_time == null
+            ? initial?.end_time
+            : form.end_time,
 
         actual_datetime: finalDatetime,
 
@@ -296,6 +283,43 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
             )}
           </div>
 
+          {/* 시간 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div className="form-group">
+              <label className="form-label">시작 시간</label>
+              <select
+                className="form-input"
+                value={form.start_time}
+                onChange={e => set('start_time', e.target.value)}
+              >
+                <option value="">선택</option>
+
+                {TIME_OPTIONS.map(t => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">종료 시간</label>
+              <select
+                className="form-input"
+                value={form.end_time}
+                onChange={e => set('end_time', e.target.value)}
+              >
+                <option value="">선택</option>
+
+                {TIME_OPTIONS.map(t => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* 비용 */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div className="form-group">
@@ -309,63 +333,6 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 onChange={e => set('cost_krw', e.target.value)} />
             </div>
           </div>
-
-          {/* 영수증 OCR */}
-          <input ref={receiptInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleReceiptOCR} />
-
-          {ocrState === 'idle' && (
-            <button onClick={() => receiptInputRef.current?.click()}
-              style={{
-                padding: '8px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
-                background: 'var(--bg2)', color: 'var(--text2)',
-                border: '1px dashed var(--border)', width: '100%',
-              }}>
-              🧾 영수증 OCR로 금액 불러오기
-            </button>
-          )}
-
-          {ocrState === 'loading' && (
-            <div style={{
-              padding: 12, borderRadius: 8, background: 'var(--bg2)',
-              fontSize: 13, color: 'var(--text2)', textAlign: 'center',
-            }}>
-              <div style={{ marginBottom: 8 }}>영수증 분석 중... {ocrProgress}%</div>
-              <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
-                <div style={{ height: '100%', width: `${ocrProgress}%`, background: 'var(--accent)', borderRadius: 2, transition: 'width .3s' }} />
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
-                일본어 OCR은 15~30초 정도 걸릴 수 있어요
-              </div>
-              <button onClick={async () => { await cancelOCR(); setOcrState('idle'); setOcrProgress(0) }}
-                style={{ marginTop: 10, padding: '6px 12px', fontSize: 12, borderRadius: 6, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}>
-                취소
-              </button>
-            </div>
-          )}
-
-          {ocrState === 'done' && (
-            <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg2)', fontSize: 13 }}>
-              <div style={{ fontWeight: 500, marginBottom: 8, color: 'var(--text2)' }}>
-                금액 후보 (탭하면 입력)
-              </div>
-              {ocrAmounts.length === 0 ? (
-                <div style={{ color: 'var(--text3)' }}>금액을 인식하지 못했어요. 직접 입력해 주세요.</div>
-              ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {ocrAmounts.map(amt => (
-                    <button key={amt} onClick={() => selectOcrAmount(amt)}
-                      style={{ padding: '6px 12px', borderRadius: 999, fontSize: 13, cursor: 'pointer', background: 'var(--accent)', color: '#fff', border: 'none' }}>
-                      {amt.toLocaleString()}원
-                    </button>
-                  ))}
-                </div>
-              )}
-              <button onClick={() => setOcrState('idle')}
-                style={{ marginTop: 8, fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                닫기
-              </button>
-            </div>
-          )}
 
           {/* 결제 수단 */}
           <div className="form-group">
