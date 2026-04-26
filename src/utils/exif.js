@@ -26,3 +26,14 @@ export async function readPhotoDate(file) {
     return null
   }
 }
+
+// 추가
+export async function readPhotoGps(file) {
+  try {
+    const result = await exifr.gps(file)
+    if (!result?.latitude || !result?.longitude) return null
+    return { lat: result.latitude, lng: result.longitude }
+  } catch {
+    return null
+  }
+}

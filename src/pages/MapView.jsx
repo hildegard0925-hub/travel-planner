@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Map, AdvancedMarker, Polyline, useMap } from '@vis.gl/react-google-maps'
 import { useTrip } from '../hooks/useTrips.js'
 import { useSchedules } from '../hooks/useSchedules.js'
+import { useRecords } from '../hooks/useRecords.js'
 import { useGeolocation } from '../hooks/useGeolocation.js'
 import { addDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -17,6 +18,19 @@ export default function MapView() {
   const navigate = useNavigate()
   const { trip } = useTrip(tripId)
   const { schedules, byDay } = useSchedules(tripId)
+  const { records } = useRecords(tripId)
+  const [selectedDay, setSelectedDay] = useState(0) // 기본: 1일차
+
+  const photoRecords = (selectedDay === null
+    ? records
+    : records.filter(r => r.day_index === selectedDay)
+  ).filter(r =>
+    r.photo_url &&
+    r.lat != null &&
+    r.lng != null &&
+    !isNaN(Number(r.lat)) &&
+    !isNaN(Number(r.lng))
+  )
   const {
     position,
     heading,
@@ -25,7 +39,7 @@ export default function MapView() {
     stopWatch,
     error
   } = useGeolocation()
-  const [selectedDay, setSelectedDay] = useState(0) // 기본: 1일차
+  
   const location = useLocation()
   const params = new URLSearchParams(location.search)
 
@@ -51,6 +65,8 @@ export default function MapView() {
     }
   }, [focusLat, focusLng, schedules])
   const [selectedItem, setSelectedItem] = useState(null)
+  const [fullPhoto, setFullPhoto] = useState(null)
+  const [layer, setLayer] = useState('schedule') // 'schedule' | 'record' | 'all'
 
   if (!trip) return null
 
@@ -69,21 +85,21 @@ export default function MapView() {
     !isNaN(Number(focusLat)) &&
     !isNaN(Number(focusLng))
 
+  const allCoords = [
+    ...schedules.filter(s => s.lat && s.lng),
+    ...records.filter(r => r.lat && r.lng),
+  ]
+
+  const centerCoord =
+    schedules.find(s => s.category === 'lodging' && s.lat && s.lng) // 숙소 우선
+    ?? allCoords[0] // 없으면 첫 번째 좌표
+
   const defaultCenter =
     isValidFocus
-      ? {
-          lat: Number(focusLat),
-          lng: Number(focusLng),
-        }
-      : displayItems.length > 0
-        ? {
-            lat: Number(displayItems[0].lat),
-            lng: Number(displayItems[0].lng),
-          }
-        : {
-          lat: 35.1796,
-          lng: 129.0756,
-        }
+      ? { lat: Number(focusLat), lng: Number(focusLng) }
+      : centerCoord
+        ? { lat: Number(centerCoord.lat), lng: Number(centerCoord.lng) }
+        : { lat: 35.1796, lng: 129.0756 }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
@@ -101,23 +117,35 @@ export default function MapView() {
         </button>
       </div>
 
-      {/* 일차 필터 */}
+      {/* 일차 필터 + 레이어 토글 */}
       <div style={{
-        display: 'flex', overflowX: 'auto', padding: '5px 12px', gap: 6,
+        display: 'flex', padding: '5px 12px', gap: 6,
         background: 'var(--surface)', borderBottom: '1px solid var(--border)',
-        scrollbarWidth: 'none',
       }}>
-        {Array.from({ length: totalDays }, (_, i) => (
-          <button key={i} onClick={() => setSelectedDay(i)}
-            style={pillStyle(selectedDay === i)}>
-            {i + 1}일차
+        {/* 일차 버튼 - 가로 스크롤 */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', flex: 1 }}>
+          {Array.from({ length: totalDays }, (_, i) => (
+            <button key={i} onClick={() => setSelectedDay(i)}
+              style={pillStyle(selectedDay === i)}>
+              {i + 1}일차
+            </button>
+          ))}
+          <button onClick={() => setSelectedDay(null)}
+            style={pillStyle(selectedDay === null)}>
+            전체
           </button>
-        ))}
+        </div>
 
-        <button onClick={() => setSelectedDay(null)}
-          style={pillStyle(selectedDay === null)}>
-          전체
-        </button>
+        {/* 구분선 + 토글 고정 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', margin: '2px 4px 2px 0' }} />
+          <button
+            onClick={() => setLayer(l => l === 'schedule' ? 'record' : 'schedule')}
+            style={pillStyle(true)}
+          >
+            {layer === 'schedule' ? '일정' : '기록'}
+          </button>
+        </div>
       </div>
 
       {/* 지도 */}
@@ -161,25 +189,15 @@ export default function MapView() {
               }} />
             </AdvancedMarker>
           )}
-          {displayItems.length > 1 && (
-            <Polyline
-              path={displayItems.map(item => ({
-                lat: item.lat,
-                lng: item.lng,
-              }))}
-              options={{
-                strokeColor: '#2a6dd4',
-                strokeOpacity: 0.8,
-                strokeWeight: 4,
-              }}
-            />
-          )}
+          
           <MoveToMyLocation
             position={position}
             watching={watching}
           />
+          <CenterOnLoad coord={!isValidFocus ? centerCoord : null} />
+
           {/* 일정 핀 */}
-          {displayItems.map((item, idx) => {
+          {(layer === 'all' || layer === 'schedule') && displayItems.map((item, idx) => {
             const pos = offsetPosition(displayItems, item, idx)
 
             return (
@@ -205,8 +223,51 @@ export default function MapView() {
               </AdvancedMarker>
             )
           })}
+          
+          {/* 사진 핀 (기록) */}
+          {(layer === 'all' || layer === 'record') && photoRecords.map(record => (
+            <AdvancedMarker
+              key={`photo-${record.id}`}
+              position={{ lat: Number(record.lat), lng: Number(record.lng) }}
+              onClick={() => setSelectedItem(record === selectedItem ? null : record)}
+            >
+              <div
+                onDoubleClick={(e) => { e.stopPropagation(); setFullPhoto(record.photo_url) }}
+                style={{
+                  width: 46, height: 46, borderRadius: '50%',
+                  border: '3px solid white',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,.35)',
+                  cursor: 'pointer',
+                }}>
+                <img src={record.photo_url} alt={record.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            </AdvancedMarker>
+          ))}
+
         </Map>
 
+        {/* 사진 풀스크린 */}
+        {fullPhoto && (
+          <div
+            onClick={() => setFullPhoto(null)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 50,
+              background: 'rgba(0,0,0,.85)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <img src={fullPhoto} alt="사진"
+              style={{ maxWidth: '95%', maxHeight: '90%', borderRadius: 12, objectFit: 'contain' }} />
+            <button onClick={() => setFullPhoto(null)}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(255,255,255,.2)', border: 'none', color: '#fff',
+                fontSize: 24, width: 40, height: 40, borderRadius: '50%', cursor: 'pointer',
+              }}>×</button>
+          </div>
+        )}
         {/* 선택된 장소 카드 */}
         {selectedItem && (
           <div className="card" style={{
@@ -216,7 +277,13 @@ export default function MapView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 
-                <div style={{ fontWeight: 500 }}>{displayItems.findIndex(i => i.id === selectedItem.id) + 1}번 {selectedItem.title}</div>
+                <div style={{ fontWeight: 500 }}>
+                  {selectedItem.photo_url
+                    ? (selectedItem.start_time?.slice(0, 5) + ' ')
+                    : (displayItems.findIndex(i => i.id === selectedItem.id) + 1) + '번 '
+                  }
+                  {selectedItem.title}
+                </div>
                 {selectedItem.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selectedItem.address}</div>}
                 {selectedItem.start_time && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 0 }}>{selectedItem.start_time?.slice(0, 5)}</div>}
               </div>
@@ -259,6 +326,20 @@ function MoveToMyLocation({ position, watching }) {
   if (!map || !position || !watching) return null
 
   map.panTo(position)
+
+  return null
+}
+
+function CenterOnLoad({ coord }) {
+  const map = useMap()
+  const didCenter = useRef(false)
+
+  useEffect(() => {
+    if (map && coord && !didCenter.current) {
+      map.panTo({ lat: Number(coord.lat), lng: Number(coord.lng) })
+      didCenter.current = true
+    }
+  }, [map, coord])
 
   return null
 }

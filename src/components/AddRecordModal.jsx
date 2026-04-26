@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { readPhotoDate } from '../utils/exif.js'
+import { readPhotoDate, readPhotoGps } from '../utils/exif.js'
 import { compressImage } from '../utils/imageUtils'
 
 import { uploadRecordPhoto } from '../services/storage.js'
@@ -44,6 +44,8 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     actual_datetime: initial?.actual_datetime ?? null,
     day_index: initial?.day_index ?? 0,
     rating: initial?.rating ?? null,
+    lat: initial?.lat ?? null,
+    lng: initial?.lng ?? null,
   })
 
   // 수정 모달: 기존 사진을 초기값으로 바로 세팅
@@ -52,6 +54,8 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
   const [exifDate, setExifDate] = useState(
     initial?.actual_datetime ? new Date(initial.actual_datetime) : null
   )
+  const [exifGps, setExifGps] = useState(null)
+  const [gpsConfirmed, setGpsConfirmed] = useState(!!initial?.lat)
   const [saving, setSaving] = useState(false)
 
   const photoInputRef = useRef()
@@ -62,9 +66,12 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 기존 시간 먼저 초기화 (핵심)
     setExifDate(null)
     set('actual_datetime', null)
+    setExifGps(null)
+    setGpsConfirmed(false)
+    set('lat', null)
+    set('lng', null)
 
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
@@ -80,6 +87,16 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     set('actual_datetime', date.toISOString())
     set('start_time', format(date, 'HH:mm'))
     set('time_source', 'photo')
+
+    // day_index 자동 계산
+    const tripStart = new Date(trip.start_date)
+    tripStart.setHours(0, 0, 0, 0)
+    const dayIdx = Math.floor((date - tripStart) / 86400000)
+    if (dayIdx >= 0) set('day_index', dayIdx)
+
+    // GPS 읽기 (없어도 진행)
+    const gps = await readPhotoGps(file)
+    if (gps) setExifGps(gps)
   }
 
   const handleCostLocal = (v) => {
@@ -209,6 +226,24 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
             <input className="form-input" value={form.title} onChange={e => set('title', e.target.value)} />
           </div>
 
+          {/* 일차 */}
+          <div className="form-group">
+            <label className="form-label">날짜</label>
+            <select
+              className="form-input"
+              value={form.day_index}
+              onChange={e => set('day_index', Number(e.target.value))}
+            >
+              {Array.from({
+                length: Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
+              }, (_, i) => (
+                <option key={i} value={i}>
+                  {i + 1}일차 ({format(new Date(new Date(trip.start_date).getTime() + i * 86400000), 'M/d')})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* 카테고리 */}
           <div className="form-group">
             <label className="form-label">카테고리</label>
@@ -252,25 +287,58 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
             <label className="form-label">사진 (1장)</label>
 
             {photoPreview ? (
-              <div style={{ position: 'relative' }}>
-                <img src={photoPreview} alt="기록 사진"
-                  style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
-                <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); set('photo_url', '') }}
-                  style={{
-                    position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: '50%',
-                    background: 'rgba(0,0,0,.5)', color: '#fff', fontSize: 14, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer',
-                  }}>×</button>
-                {exifDate && (
-                  <div style={{
-                    position: 'absolute', bottom: 6, left: 6,
-                    background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: 11, padding: '2px 8px',
-                    borderRadius: 4,
-                  }}>
-                    📷 {format(exifDate, 'M/d HH:mm', { locale: ko })} (EXIF)
+              <>
+                <div style={{ position: 'relative' }}>
+                  <img src={photoPreview} alt="기록 사진"
+                    style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+                  <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); set('photo_url', '') }}
+                    style={{
+                      position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: '50%',
+                      background: 'rgba(0,0,0,.5)', color: '#fff', fontSize: 14, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer',
+                    }}>×</button>
+                  {exifDate && (
+                    <div style={{
+                      position: 'absolute', bottom: 6, left: 6,
+                      background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: 11, padding: '2px 8px',
+                      borderRadius: 4,
+                    }}>
+                      📷 {format(exifDate, 'M/d HH:mm', { locale: ko })} (EXIF)
+                    </div>
+                  )}
+                </div>
+
+                {/* GPS 확인 */}
+                {exifGps && !gpsConfirmed && (
+                  <div style={{ background: 'var(--bg2)', borderRadius: 8, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 6 }}>
+                      📍 사진 위치를 지도에 표시할까요?
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
+                      {exifGps.lat.toFixed(5)}, {exifGps.lng.toFixed(5)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => { set('lat', exifGps.lat); set('lng', exifGps.lng); setGpsConfirmed(true) }}
+                        style={{ flex: 1, padding: '6px', borderRadius: 8, background: 'var(--accent)', color: '#fff', border: 'none', fontSize: 12, cursor: 'pointer' }}>
+                        등록
+                      </button>
+                      <button onClick={() => setExifGps(null)}
+                        style={{ flex: 1, padding: '6px', borderRadius: 8, background: 'var(--bg3)', color: 'var(--text2)', border: 'none', fontSize: 12, cursor: 'pointer' }}>
+                        건너뛰기
+                      </button>
+                    </div>
                   </div>
                 )}
-              </div>
+                {exifGps && gpsConfirmed && (
+                  <div style={{ fontSize: 12, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    📍 위치 등록됨
+                    <button onClick={() => { setExifGps(null); set('lat', null); set('lng', null); setGpsConfirmed(false) }}
+                      style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
+                      취소
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <button onClick={() => photoInputRef.current?.click()}
                 style={{
@@ -281,7 +349,14 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 📷 사진 추가
               </button>
             )}
-          </div>
+          <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handlePhotoChange}
+            />
+          </div> 
 
           {/* 시간 */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
