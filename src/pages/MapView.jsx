@@ -198,7 +198,7 @@ export default function MapView() {
 
           {/* 일정 핀 */}
           {(layer === 'all' || layer === 'schedule') && displayItems.map((item, idx) => {
-            const pos = offsetPosition(displayItems, item, idx)
+            const pos = offsetPosition(displayItems, item, idx, 0.00015)
 
             return (
               <AdvancedMarker key={item.id}
@@ -226,7 +226,7 @@ export default function MapView() {
           
           {/* 사진 핀 (기록) */}
           {(layer === 'all' || layer === 'record') && photoRecords.map((record, idx) => {
-            const pos = offsetPosition(photoRecords, record, idx)
+            const pos = offsetPosition(photoRecords, record, idx, 0.00035)
 
             return (
               <AdvancedMarker
@@ -320,8 +320,8 @@ export default function MapView() {
     </div>
   )
 }
-function offsetPosition(items, item, index) {
-  const offset = 0.00015
+function offsetPosition(items, item, index, offsetValue = 0.00015) {
+  const offset = offsetValue
 
   // 같은 좌표를 가진 항목들 찾기
   const sameLocationItems = items.filter(
