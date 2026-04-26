@@ -225,26 +225,43 @@ export default function MapView() {
           })}
           
           {/* 사진 핀 (기록) */}
-          {(layer === 'all' || layer === 'record') && photoRecords.map(record => (
-            <AdvancedMarker
-              key={`photo-${record.id}`}
-              position={{ lat: Number(record.lat), lng: Number(record.lng) }}
-              onClick={() => setSelectedItem(record === selectedItem ? null : record)}
-            >
-              <div
-                onDoubleClick={(e) => { e.stopPropagation(); setFullPhoto(record.photo_url) }}
-                style={{
-                  width: 46, height: 46, borderRadius: '50%',
-                  border: '3px solid white',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 8px rgba(0,0,0,.35)',
-                  cursor: 'pointer',
-                }}>
-                <img src={record.photo_url} alt={record.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            </AdvancedMarker>
-          ))}
+          {(layer === 'all' || layer === 'record') && photoRecords.map((record, idx) => {
+            const pos = offsetPosition(photoRecords, record, idx)
+
+            return (
+              <AdvancedMarker
+                key={`photo-${record.id}`}
+                position={pos}
+                onClick={() => setSelectedItem(record === selectedItem ? null : record)}
+              >
+                <div
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    setFullPhoto(record.photo_url)
+                  }}
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: '50%',
+                    border: '3px solid white',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0,0,0,.35)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <img
+                    src={record.photo_url}
+                    alt={record.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              </AdvancedMarker>
+            )
+          })}
 
         </Map>
 
