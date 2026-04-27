@@ -316,7 +316,19 @@ export default function MapView() {
                   }
                   {selectedItem.title}
                 </div>
-                {selectedItem.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selectedItem.address}</div>}
+                {selectedItem.address && (
+                  <div
+                    onClick={() => window.open(
+                      selectedItem.place_id
+                        ? `https://www.google.com/maps/place/?q=place_id:${selectedItem.place_id}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.address)}`,
+                      '_blank'
+                    )}
+                    style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {selectedItem.address}
+                  </div>
+                )}
                 {selectedItem.start_time && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 0 }}>{selectedItem.start_time?.slice(0, 5)}</div>}
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
