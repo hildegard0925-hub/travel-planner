@@ -12,7 +12,10 @@ const CAT_COLOR = {
   food: '#d4622a', transport: '#2a6dd4', shopping: '#9b2ad4',
   activity: '#2a9d6d', lodging: '#d4972a', etc: '#6b6560',
 }
-
+const CAT_LABEL = {
+  food: '식사', transport: '이동', shopping: '쇼핑',
+  activity: '관광', lodging: '숙소', etc: '기타',
+}
 export default function MapView() {
   const { tripId } = useParams()
   const navigate = useNavigate()
@@ -78,6 +81,16 @@ export default function MapView() {
       !isNaN(Number(s.lat)) &&
       !isNaN(Number(s.lng))
     )
+
+  // place_id 또는 lat/lng 기준으로 그룹화
+  const groupedItems = Object.values(
+    displayItems.reduce((acc, item, idx) => {
+      const key = item.place_id || `${item.lat},${item.lng}`
+      if (!acc[key]) acc[key] = { ...item, indices: [] }
+      acc[key].indices.push(idx + 1)
+      return acc
+    }, {})
+  )
 
   const isValidFocus =
     focusLat !== null &&
@@ -174,6 +187,7 @@ export default function MapView() {
           gestureHandling="greedy"
           disableDefaultUI={false}
           clickableIcons={false}
+          onClick={() => setSelectedItem(null)}
         >
           {/* 현재 위치 */}
           {position && (
@@ -197,28 +211,26 @@ export default function MapView() {
           <CenterOnLoad coord={!isValidFocus ? centerCoord : null} />
 
           {/* 일정 핀 */}
-          {(layer === 'all' || layer === 'schedule') && displayItems.map((item, idx) => {
-            const pos = offsetPosition(displayItems, item, idx, 0.00015)
-
+          {(layer === 'all' || layer === 'schedule') && groupedItems.map((item) => {
             return (
               <AdvancedMarker key={item.id}
-                position={pos}
+                position={{ lat: Number(item.lat), lng: Number(item.lng) }}
+                zIndex={item.id === selectedItem?.id ? 999999 : Math.round((90 - Number(item.lat)) * 1000)}
                 onClick={() => setSelectedItem(item === selectedItem ? null : item)}
               >
                 <div style={{
                   background: CAT_COLOR[item.category] ?? '#6b6560',
                   color: '#fff',
-                  borderRadius: '50% 50% 50% 0',
-                  transform: 'rotate(-45deg)',
-                  width: 32, height: 32,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 999,
+                  padding: '4px 8px',
+                  display: 'flex', alignItems: 'center', gap: 4,
                   boxShadow: '0 2px 8px rgba(0,0,0,.25)',
                   border: '2px solid white',
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                 }}>
-                  <span style={{ transform: 'rotate(45deg)', fontSize: 13, fontWeight: 700 }}>
-                    {idx + 1}
-                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>{item.indices.join(', ')}</span>
+                  <span style={{ fontSize: 11 }}>{CAT_LABEL[item.category] ?? '기타'}</span>
                 </div>
               </AdvancedMarker>
             )
@@ -232,7 +244,8 @@ export default function MapView() {
               <AdvancedMarker
                 key={`photo-${record.id}`}
                 position={pos}
-                onClick={() => setSelectedItem(record === selectedItem ? null : record)}
+                zIndex={record.id === selectedItem?.id ? 999999 : Math.round((90 - Number(record.lat)) * 1000)}
+                onClick={() => setSelectedItem(record)}
               >
                 <div
                   onDoubleClick={(e) => {
@@ -297,7 +310,9 @@ export default function MapView() {
                 <div style={{ fontWeight: 500 }}>
                   {selectedItem.photo_url
                     ? (selectedItem.start_time?.slice(0, 5) + ' ')
-                    : (displayItems.findIndex(i => i.id === selectedItem.id) + 1) + '번 '
+                    : selectedItem.indices
+                      ? selectedItem.indices.join(', ') + '번 '
+                      : (displayItems.findIndex(i => i.id === selectedItem.id) + 1) + '번 '
                   }
                   {selectedItem.title}
                 </div>
