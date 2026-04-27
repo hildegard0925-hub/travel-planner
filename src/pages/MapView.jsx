@@ -318,12 +318,24 @@ export default function MapView() {
                 </div>
                 {selectedItem.address && (
                   <div
-                    onClick={() => window.open(
-                      selectedItem.place_id
-                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.title)}&query_place_id=${selectedItem.place_id}`
-                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.address)}`,
-                      '_blank'
-                    )}
+                    onClick={() => {
+                      if (selectedItem.lat && selectedItem.lng) {
+                        window.open(
+                          `https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}`,
+                          '_blank'
+                        )
+                      } else if (selectedItem.place_id) {
+                        window.open(
+                          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.title)}&query_place_id=${selectedItem.place_id}`,
+                          '_blank'
+                        )
+                      } else {
+                        window.open(
+                          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.address)}`,
+                          '_blank'
+                        )
+                      }
+                    }}
                     style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, cursor: 'pointer', textDecoration: 'underline' }}
                   >
                     {selectedItem.address}
