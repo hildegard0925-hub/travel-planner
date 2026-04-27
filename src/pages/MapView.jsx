@@ -320,7 +320,7 @@ export default function MapView() {
                   <div
                     onClick={() => window.open(
                       selectedItem.place_id
-                        ? `https://www.google.com/maps/place/?q=place_id:${selectedItem.place_id}`
+                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.title)}&query_place_id=${selectedItem.place_id}`
                         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.address)}`,
                       '_blank'
                     )}
