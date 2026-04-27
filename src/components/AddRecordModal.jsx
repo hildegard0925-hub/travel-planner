@@ -63,6 +63,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
   // 사진 선택 → 미리보기 + EXIF 읽기
   const handlePhotoChange = async (e) => {
+    navigator.geolocation.getCurrentPosition(() => {}, () => {})
     const file = e.target.files?.[0]
     if (!file) return
 
