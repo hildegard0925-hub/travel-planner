@@ -30,17 +30,9 @@ export async function readPhotoDate(file) {
 // 추가
 export async function readPhotoGps(file) {
   try {
-    const data = await exifr.parse(file, {
-      pick: ['latitude', 'longitude']
-    })
-
-    if (!data?.latitude || !data?.longitude) return null
-
-    return {
-      lat: data.latitude,
-      lng: data.longitude
-    }
-
+    const result = await exifr.gps(file)
+    if (!result?.latitude || !result?.longitude) return null
+    return { lat: result.latitude, lng: result.longitude }
   } catch {
     return null
   }
