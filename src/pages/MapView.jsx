@@ -325,17 +325,17 @@ export default function MapView() {
 
                       if (selectedItem.lat && selectedItem.lng) {
                         window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${selectedItem.lat},${selectedItem.lng}&travelmode=walking`,
+                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${selectedItem.lat},${selectedItem.lng}&travelmode=walking&dirflg=w`,
                           '_blank'
                         )
                       } else if (selectedItem.place_id) {
                         window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.title)}&destination_place_id=${selectedItem.place_id}&travelmode=walking`,
+                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.title)}&destination_place_id=${selectedItem.place_id}&travelmode=walking&dirflg=w`,
                           '_blank'
                         )
                       } else {
                         window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.address)}&travelmode=walking`,
+                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.address)}&travelmode=walking&dirflg=w`,
                           '_blank'
                         )
                       }
