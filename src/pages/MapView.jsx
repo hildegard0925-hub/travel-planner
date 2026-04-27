@@ -323,22 +323,14 @@ export default function MapView() {
                         ? `${position.lat},${position.lng}`
                         : ''
 
-                      if (selectedItem.lat && selectedItem.lng) {
-                        window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${selectedItem.lat},${selectedItem.lng}&travelmode=walking&dirflg=w`,
-                          '_blank'
-                        )
-                      } else if (selectedItem.place_id) {
-                        window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.title)}&destination_place_id=${selectedItem.place_id}&travelmode=walking&dirflg=w`,
-                          '_blank'
-                        )
-                      } else {
-                        window.open(
-                          `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(selectedItem.address)}&travelmode=walking&dirflg=w`,
-                          '_blank'
-                        )
-                      }
+                      const destination = selectedItem.lat && selectedItem.lng
+                        ? `${selectedItem.lat},${selectedItem.lng}`
+                        : encodeURIComponent(selectedItem.address || selectedItem.title)
+
+                      window.open(
+                        `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=w`,
+                        '_blank'
+                      )
                     }}
                     style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, cursor: 'pointer', textDecoration: 'underline' }}
                   >
