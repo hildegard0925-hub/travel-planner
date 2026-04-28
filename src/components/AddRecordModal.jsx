@@ -57,9 +57,50 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
   const [exifGps, setExifGps] = useState(null)
   const [gpsConfirmed, setGpsConfirmed] = useState(!!initial?.lat)
   const [saving, setSaving] = useState(false)
+  const [gpsUnavailable, setGpsUnavailable] = useState(false)
+  const [placeQuery, setPlaceQuery] = useState('')
+  const [placeSuggestions, setPlaceSuggestions] = useState([])
 
   const photoInputRef = useRef()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handlePlaceSearch = async (query) => {
+    setPlaceQuery(query)
+    if (!query.trim()) { setPlaceSuggestions([]); return }
+    try {
+      const { AutocompleteSuggestion } = await window.google.maps.importLibrary('places')
+      const request = { input: query }
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
+      setPlaceSuggestions(suggestions.map(s => ({
+        place_id: s.placePrediction.placeId,
+        description: s.placePrediction.text.toString(),
+      })))
+    } catch {
+      setPlaceSuggestions([])
+    }
+  }
+
+  const handlePlaceSelect = async (placeId, description) => {
+    try {
+      const { Place } = await window.google.maps.importLibrary('places')
+      const place = new Place({ id: placeId })
+      await place.fetchFields({ fields: ['location', 'formattedAddress'] })
+      const coords = {
+        lat: place.location.lat(),
+        lng: place.location.lng(),
+      }
+      setExifGps(coords)
+      setGpsConfirmed(true)
+      set('lat', coords.lat)
+      set('lng', coords.lng)
+      set('address', place.formattedAddress || description)
+      setGpsUnavailable(false)
+      setPlaceSuggestions([])
+      setPlaceQuery('')
+    } catch {
+      alert('장소 정보를 가져오지 못했습니다.')
+    }
+  }
 
   // 사진 선택 → 미리보기 + EXIF 읽기
   const handlePhotoChange = async (e) => {
@@ -91,12 +132,19 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     // day_index 자동 계산
     const tripStart = new Date(trip.start_date)
     tripStart.setHours(0, 0, 0, 0)
+    const totalDays = Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
     const dayIdx = Math.floor((date - tripStart) / 86400000)
-    if (dayIdx >= 0) set('day_index', dayIdx)
+    const clampedIdx = Math.max(0, Math.min(dayIdx, totalDays - 1))
+    set('day_index', clampedIdx)
 
     // GPS 읽기 (없어도 진행)
     const gps = await readPhotoGps(file)
-    if (gps) setExifGps(gps)
+    if (gps) {
+      setExifGps(gps)
+      setGpsUnavailable(false)
+    } else {
+      setGpsUnavailable(true)
+    }
   }
 
   const handleCostLocal = (v) => {
@@ -335,6 +383,52 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                     <button onClick={() => { setExifGps(null); set('lat', null); set('lng', null); setGpsConfirmed(false) }}
                       style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
                       취소
+                    </button>
+                  </div>
+                )}
+
+                {/* GPS 없을 때 장소 검색 폴백 */}
+                {!exifGps && gpsUnavailable && (
+                  <div style={{ background: 'var(--bg2)', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>
+                      📍 위치를 장소로 검색해서 등록할 수 있어요
+                    </div>
+                    <input
+                      className="form-input"
+                      placeholder="장소명 또는 주소 검색"
+                      value={placeQuery}
+                      onChange={e => handlePlaceSearch(e.target.value)}
+                      style={{ marginBottom: placeSuggestions.length ? 4 : 0 }}
+                    />
+                    {placeSuggestions.length > 0 && (
+                      <div style={{
+                        background: 'var(--bg1)', borderRadius: 8,
+                        border: '1px solid var(--border)', overflow: 'hidden',
+                      }}>
+                        {placeSuggestions.map(p => (
+                          <button
+                            key={p.place_id}
+                            onClick={() => handlePlaceSelect(p.place_id, p.description)}
+                            style={{
+                              width: '100%', padding: '8px 12px', textAlign: 'left',
+                              background: 'none', border: 'none', borderBottom: '1px solid var(--border)',
+                              fontSize: 12, color: 'var(--text1)', cursor: 'pointer',
+                            }}
+                          >
+                            {p.description}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => { setGpsUnavailable(false); setPlaceQuery(''); setPlaceSuggestions([]) }}
+                      style={{
+                        marginTop: 6, width: '100%', padding: '6px', borderRadius: 8,
+                        background: 'var(--bg3)', color: 'var(--text2)',
+                        border: 'none', fontSize: 12, cursor: 'pointer',
+                      }}
+                    >
+                      건너뛰기
                     </button>
                   </div>
                 )}
