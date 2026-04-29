@@ -69,11 +69,11 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     if (!query.trim()) { setPlaceSuggestions([]); return }
     try {
       const { AutocompleteSuggestion } = await window.google.maps.importLibrary('places')
-      const request = { input: query }
-      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: query })
       setPlaceSuggestions(suggestions.map(s => ({
         place_id: s.placePrediction.placeId,
-        description: s.placePrediction.text.toString(),
+        main: s.placePrediction.mainText?.toString() ?? '',
+        secondary: s.placePrediction.secondaryText?.toString() ?? '',
       })))
     } catch {
       setPlaceSuggestions([])
@@ -389,7 +389,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
                 {/* GPS 없을 때 장소 검색 폴백 */}
                 {!exifGps && gpsUnavailable && (
-                  <div style={{ background: 'var(--bg2)', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
+                  <div style={{ background: 'var(--bg1, #ffffff)', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
                     <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>
                       📍 위치를 장소로 검색해서 등록할 수 있어요
                     </div>
@@ -405,17 +405,19 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                         background: 'var(--bg1)', borderRadius: 8,
                         border: '1px solid var(--border)', overflow: 'hidden',
                       }}>
-                        {placeSuggestions.map(p => (
+                        {placeSuggestions.map((p, i) => (
                           <button
                             key={p.place_id}
-                            onClick={() => handlePlaceSelect(p.place_id, p.description)}
+                            onClick={() => handlePlaceSelect(p.place_id, p.secondary)}
                             style={{
-                              width: '100%', padding: '8px 12px', textAlign: 'left',
-                              background: 'none', border: 'none', borderBottom: '1px solid var(--border)',
-                              fontSize: 12, color: 'var(--text1)', cursor: 'pointer',
+                              width: '100%', padding: '9px 12px', textAlign: 'left',
+                              background: 'none', border: 'none',
+                              borderBottom: i < placeSuggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                              cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2,
                             }}
                           >
-                            {p.description}
+                            <span style={{ fontSize: 13, color: 'var(--text1)', fontWeight: 500 }}>{p.main}</span>
+                            {p.secondary && <span style={{ fontSize: 11, color: 'var(--text3)' }}>{p.secondary}</span>}
                           </button>
                         ))}
                       </div>
