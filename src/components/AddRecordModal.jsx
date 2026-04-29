@@ -62,29 +62,63 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
   const [placeSuggestions, setPlaceSuggestions] = useState([])
 
   const photoInputRef = useRef()
+  const debounceRef = useRef(null)
+  const sessionTokenRef = useRef(null)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const getOrCreateToken = async () => {
+    if (!sessionTokenRef.current) {
+      const { AutocompleteSessionToken } =
+        await window.google.maps.importLibrary('places')
+      sessionTokenRef.current = new AutocompleteSessionToken()
+    }
+    return sessionTokenRef.current
+  }
 
   const handlePlaceSearch = async (query) => {
     setPlaceQuery(query)
-    if (!query.trim()) { setPlaceSuggestions([]); return }
-    try {
-      const { AutocompleteSuggestion } = await window.google.maps.importLibrary('places')
-      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: query })
-      setPlaceSuggestions(suggestions.map(s => ({
-        place_id: s.placePrediction.placeId,
-        main: s.placePrediction.mainText?.toString() ?? '',
-        secondary: s.placePrediction.secondaryText?.toString() ?? '',
-      })))
-    } catch {
-      setPlaceSuggestions([])
-    }
-  }
+    clearTimeout(debounceRef.current)
 
+    if (!query.trim()) {
+      setPlaceSuggestions([])
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const { AutocompleteSuggestion } =
+          await window.google.maps.importLibrary('places')
+
+        const token = await getOrCreateToken()
+
+        const { suggestions } =
+          await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: query,
+            sessionToken: token,
+          })
+
+        setPlaceSuggestions(
+          suggestions.map(s => ({
+            place_id: s.placePrediction.placeId,
+            main: s.placePrediction.mainText?.toString() ?? '',
+            secondary: s.placePrediction.secondaryText?.toString() ?? '',
+          }))
+        )
+      } catch {
+        setPlaceSuggestions([])
+      }
+    }, 400)
+  }
   const handlePlaceSelect = async (placeId, description) => {
     try {
+      const token = sessionTokenRef.current
+      sessionTokenRef.current = null
       const { Place } = await window.google.maps.importLibrary('places')
       const place = new Place({ id: placeId })
-      await place.fetchFields({ fields: ['location', 'formattedAddress'] })
+      await place.fetchFields({
+        fields: ['location', 'formattedAddress'],
+        sessionToken: token,
+      })
       const coords = {
         lat: place.location.lat(),
         lng: place.location.lng(),
