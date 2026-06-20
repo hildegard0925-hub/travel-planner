@@ -82,3 +82,14 @@ export async function deletePhoto(id) {
   })
 
 }
+export async function getPhotoUrl(id) {
+
+  const blob = await getPhoto(id)
+
+  if (!blob) {
+    return null
+  }
+
+  return URL.createObjectURL(blob)
+
+}
