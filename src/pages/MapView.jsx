@@ -28,7 +28,7 @@ export default function MapView() {
     ? records
     : records.filter(r => r.day_index === selectedDay)
   ).filter(r =>
-    r.photo_url &&
+    (r.photo_id || r.photo_url) &&
     r.lat != null &&
     r.lng != null &&
     !isNaN(Number(r.lat)) &&
