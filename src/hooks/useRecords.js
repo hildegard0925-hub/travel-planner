@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase.js'
-import { deleteRecordPhoto } from '../services/storage.js'
+import { loadData, saveData } from '../services/storage.js'
 
 export function useRecords(tripId) {
   const [records, setRecords] = useState([])
@@ -12,80 +11,122 @@ export function useRecords(tripId) {
   }, [tripId])
 
   async function fetchRecords() {
+
     setLoading(true)
-    const { data, error } = await supabase
-      .from('records')
-      .select('*')
-      .eq('trip_id', tripId)
-      .order('day_index')
-      .order('start_time', { nullsFirst: false })
-      .order('created_at')
-    if (!error) setRecords(data || [])
+
+    const data = loadData()
+
+    const records =
+      data.records
+        .filter(
+          r => r.trip_id === tripId
+        )
+        .sort(byDayDate)
+
+    setRecords(records)
+
     setLoading(false)
+
   }
 
   async function addRecord(values) {
-    const { data, error } = await supabase
-      .from('records')
-      .insert({ ...values, trip_id: tripId })
-      .select()
-      .single()
-    if (!error) setRecords(prev => [...prev, data].sort(byDayDate))
-    return { data, error }
+
+    const data = loadData()
+
+    const newRecord = {
+      id: crypto.randomUUID(),
+      trip_id: tripId,
+      created_at: new Date().toISOString(),
+      ...values
+    }
+
+    data.records.push(newRecord)
+
+    saveData(data)
+
+    setRecords(prev =>
+      [...prev, newRecord].sort(byDayDate)
+    )
+
+    return {
+      data: newRecord,
+      error: null
+    }
+
   }
 
   async function updateRecord(id, values) {
-    const { data, error } = await supabase
-      .from('records')
-      .update(values)
-      .eq('id', id)
-      .select()
-      .single()
-    if (!error) setRecords(prev => prev.map(r => r.id === id ? data : r).sort(byDayDate))
-    return { data, error }
+
+    const data = loadData()
+
+    data.records =
+      data.records.map(r =>
+        r.id === id
+          ? {
+              ...r,
+              ...values
+            }
+          : r
+      )
+
+    saveData(data)
+
+    setRecords(prev =>
+      prev
+        .map(r =>
+          r.id === id
+            ? {
+                ...r,
+                ...values
+              }
+            : r
+        )
+        .sort(byDayDate)
+    )
+
+    return {
+      data:
+        data.records.find(
+          r => r.id === id
+        ),
+      error: null
+    }
+
   }
 
   async function deleteRecord(id) {
+
     try {
-      /*
-        1. 삭제할 record 찾기
-      */
 
-      const record =
-        records.find(r => r.id === id)
+      const data = loadData()
 
-      /*
-        2. 사진 먼저 삭제
-      */
-
-      if (record?.photo_url) {
-        await deleteRecordPhoto(
-          record.photo_url
+      data.records =
+        data.records.filter(
+          r => r.id !== id
         )
-      }
 
-      /*
-        3. DB 삭제
-      */
+      saveData(data)
 
-      const { error } =
-        await supabase
-          .from('records')
-          .delete()
-          .eq('id', id)
-
-      if (!error) {
-        setRecords(prev =>
-          prev.filter(r => r.id !== id)
+      setRecords(prev =>
+        prev.filter(
+          r => r.id !== id
         )
-      }
+      )
 
-      return { error }
+      return {
+        error: null
+      }
 
     } catch (err) {
+
       console.error(err)
-      return { error: err }
+
+      return {
+        error: err
+      }
+
     }
+
   }
 
   /**
@@ -137,28 +178,29 @@ export async function recalculateAllRecordCosts(
   tripId,
   newRate
 ) {
-  const { data, error } = await supabase
-    .from('records')
-    .select('*')
-    .eq('trip_id', tripId)
 
-  if (error || !data) return
+  const data = loadData()
 
-  for (const item of data) {
-    if (
-      item.cost_local === null ||
-      item.cost_local === undefined ||
-      item.cost_local === 0
-    ) {
-      continue
-    }
+  data.records =
+    data.records.map(item => {
 
-    const newKrw =
-      Math.round(item.cost_local * newRate)
+      if (
+        item.trip_id !== tripId ||
+        !item.cost_local
+      ) {
+        return item
+      }
 
-    await supabase
-      .from('records')
-      .update({ cost_krw: newKrw })
-      .eq('id', item.id)
-  }
+      return {
+        ...item,
+        cost_krw:
+          Math.round(
+            item.cost_local * newRate
+          )
+      }
+
+    })
+
+  saveData(data)
+
 }

@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useTrips } from '../hooks/useTrips.js'
 import { format, differenceInDays } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import DataManageModal from '../components/DataManageModal'
+import {
+  exportBackup,
+  importBackup
+} from '../services/backupService.js'
+import { migrateFromSupabase } from '../services/migrationService'
 
 const CURRENCY_FLAG = {
   KRW: '🇰🇷',
@@ -21,38 +27,129 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [avgRatings, setAvgRatings] = useState({})
   const navigate = useNavigate()
+  const [showDataModal, setShowDataModal] = useState(false)
 
   useEffect(() => {
-    if (trips.length === 0) return
-    import('../lib/supabase.js').then(({ supabase }) => {
-      supabase.from('records').select('trip_id, rating').not('rating', 'is', null)
-        .then(({ data }) => {
-          if (!data) return
-          const map = {}
-          data.forEach(r => {
-            if (!map[r.trip_id]) map[r.trip_id] = []
-            map[r.trip_id].push(r.rating)
-          })
-          const avgs = {}
-          Object.entries(map).forEach(([id, ratings]) => {
-            avgs[id] = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
-          })
-          setAvgRatings(avgs)
-        })
-    })
+
+    try {
+
+      const raw =
+        localStorage.getItem('jellytravel_data')
+
+      if (!raw) return
+
+      const data = JSON.parse(raw)
+
+      const records = data.records || []
+
+      const grouped = {}
+
+      records.forEach(record => {
+
+        if (
+          !record.trip_id ||
+          record.rating == null
+        ) return
+
+        if (!grouped[record.trip_id]) {
+          grouped[record.trip_id] = []
+        }
+
+        grouped[record.trip_id].push(
+          Number(record.rating)
+        )
+
+      })
+
+      const averages = {}
+
+      Object.entries(grouped).forEach(
+        ([tripId, ratings]) => {
+
+          const avg =
+            ratings.reduce(
+              (a, b) => a + b,
+              0
+            ) / ratings.length
+
+          averages[tripId] =
+            avg.toFixed(1)
+
+        }
+      )
+
+      setAvgRatings(averages)
+
+    } catch (err) {
+
+      console.error(
+        '평균 별점 계산 오류',
+        err
+      )
+
+    }
+
   }, [trips])
 
   return (
     <div>
       <div className="top-header">
-        <h1 style={{ fontWeight: 700 }}>Jelly Travel</h1>
-        <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
-          onClick={() => {
-            setShowForm(true)
-          }}
-        >
-          + 새 여행
-        </button>
+        <h1>Jelly Travel</h1>
+
+        <div style={{
+          display:'flex',
+          gap:8,
+          alignItems:'center'
+        }}>
+
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowForm(true)}
+          >
+            + 새 여행
+          </button>
+
+          <button
+            className="btn"
+            onClick={async () => {
+
+              if (!confirm('Supabase 데이터를 가져올까요?')) {
+                return
+              }
+
+              const result =
+                await migrateFromSupabase()
+
+              if (result.success) {
+
+                alert(
+                  `이관 완료!\n사진 ${result.photoCount}장`
+                )
+
+                window.location.reload()
+
+              } else {
+
+                alert(
+                  '이관 실패\n' +
+                  result.error
+                )
+
+              }
+
+            }}
+          >
+            ☁️ 데이터 가져오기
+          </button>
+
+          <button
+            className="btn"
+            onClick={() => setShowDataModal(true)}
+          >
+            💾
+          </button>
+
+        </div>
       </div>
 
       <div style={{ padding: '9px 16px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -117,10 +214,41 @@ export default function Home() {
         })}
       </div>
 
-      {showForm && <NewTripModal onClose={() => setShowForm(false)} onCreate={async (v) => {
-        const { data } = await createTrip(v)
-        if (data) { setShowForm(false); navigate(`/trip/${data.id}`) }
-      }} />}
+      {showForm && (
+        <NewTripModal
+          onClose={() => setShowForm(false)}
+          onCreate={async (v) => {
+            const { data } = await createTrip(v)
+            if (data) {
+              setShowForm(false)
+              navigate(`/trip/${data.id}`)
+            }
+          }}
+        />
+      )}
+
+      <DataManageModal
+        open={showDataModal}
+        onClose={() => setShowDataModal(false)}
+
+        onBackup={() => {
+          exportBackup()
+        }}
+
+        onRestore={async (file) => {
+
+          const ok = await importBackup(file)
+
+          if (ok) {
+            alert('복원이 완료되었습니다.')
+
+            window.location.reload()
+          } else {
+            alert('복원 실패')
+          }
+
+        }}
+      />
     </div>
   )
 }

@@ -7,9 +7,9 @@ import { ko } from 'date-fns/locale'
 import AddRecordModal from '../components/AddRecordModal.jsx'
 import RecordTableView from './RecordTableView.jsx'
 import PhotoViewer from '../components/PhotoViewer.jsx'
-import { deleteRecordPhoto } from '../services/storage.js'
 import { linkify } from '../utils/linkify'
 import { useLocation } from 'react-router-dom'
+import { getPhoto, deletePhoto } from '../services/photoStorage.js'
 
 const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
 
@@ -65,7 +65,7 @@ export default function Records() {
           threshold: 0
         }
       )
-
+      
       dayRefs.current.forEach(el => {
         if (el) observer.observe(el)
       })
@@ -202,7 +202,7 @@ export default function Records() {
 
           <span>💴 {totalKrw.toLocaleString()}원</span>
 
-          <span>📷 {records.filter(r => r.photo_url).length}장 사진</span>
+          <span>📷 {records.filter(r => r.photo_id).length}장 사진</span>
         </div>
       )}
 
@@ -248,10 +248,9 @@ export default function Records() {
 
                       if (!confirm('이 기록을 삭제할까요?')) return
 
-                      if (record.photo_url) {
-                        await deleteRecordPhoto(record.photo_url)
+                      if (record.photo_id) {
+                        await deletePhoto(record.photo_id)
                       }
-
                       await deleteRecord(record.id)
                     }}
                   />
@@ -288,6 +287,41 @@ export default function Records() {
 }
 
 function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
+  const [photoUrl, setPhotoUrl] = useState(null)
+
+  useEffect(() => {
+
+    let objectUrl = null
+
+    async function loadPhoto() {
+
+      if (!record.photo_id) {
+        setPhotoUrl(null)
+        return
+      }
+
+      const blob = await getPhoto(record.photo_id)
+
+      if (!blob) {
+        setPhotoUrl(null)
+        return
+      }
+
+      objectUrl = URL.createObjectURL(blob)
+
+      setPhotoUrl(objectUrl)
+
+    }
+
+    loadPhoto()
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+
+  }, [record.photo_id])
   const [viewerUrl, setViewerUrl] = useState(null)
   const [expanded, setExpanded] = useState(false)
   const [showTimeMenu, setShowTimeMenu] = useState(false)
@@ -346,13 +380,13 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
     >
 
       {/* 사진: 펼쳐졌을 때만 표시 */}
-      {expanded && record.photo_url && (
+      {expanded && record.photo_id && (
         <img
-          src={record.photo_url}
+          src={photoUrl}
           alt={record.title}
           onClick={(e) => {
             e.stopPropagation()
-            setViewerUrl(record.photo_url)
+            setViewerUrl(record.photo_id)
           }}
           style={{
             width: '100%',
@@ -380,7 +414,7 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
               <span style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {record.title}
               </span>
-              {record.photo_url && !expanded && (
+              {record.photo_id && !expanded && (
                 <span style={{ fontSize: 11, flexShrink: 0 }}>📷</span>
               )}
             </div>

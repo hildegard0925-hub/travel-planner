@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { loadData, saveData } from '../services/storage.js'
 
 export function useChecklist(tripId) {
   const [items, setItems] = useState([])
@@ -12,85 +12,132 @@ export function useChecklist(tripId) {
   }, [tripId])
 
   async function fetchItems() {
+
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('checklists')
-      .select('*')
-      .eq('trip_id', tripId)
-      .order('category')
-      .order('created_at')
+    const data = loadData()
 
-    if (!error) {
-      setItems(data || [])
-    }
+    const items =
+      data.checklists
+        .filter(
+          item => item.trip_id === tripId
+        )
+        .sort((a, b) => {
+
+          if (a.category !== b.category) {
+            return a.category.localeCompare(b.category)
+          }
+
+          return new Date(a.created_at) - new Date(b.created_at)
+
+        })
+
+    setItems(items)
 
     setLoading(false)
+
   }
 
   async function addDefaults(DEFAULT_ITEMS) {
+
+    const data = loadData()
+
     const rows = []
 
     for (const [cat, list] of Object.entries(DEFAULT_ITEMS)) {
+
       for (const item of list) {
+
         rows.push({
+          id: crypto.randomUUID(),
           trip_id: tripId,
           category: cat,
           item,
-          is_checked: false
+          is_checked: false,
+          created_at: new Date().toISOString()
         })
+
       }
+
     }
 
-    await supabase
-      .from('checklists')
-      .insert(rows)
+    data.checklists.push(...rows)
+
+    saveData(data)
 
     fetchItems()
+
   }
 
   async function toggle(id, checked) {
-    await supabase
-      .from('checklists')
-      .update({ is_checked: !checked })
-      .eq('id', id)
+
+    const data = loadData()
+
+    data.checklists =
+      data.checklists.map(i =>
+        i.id === id
+          ? {
+              ...i,
+              is_checked: !checked
+            }
+          : i
+      )
+
+    saveData(data)
 
     setItems(prev =>
       prev.map(i =>
         i.id === id
-          ? { ...i, is_checked: !checked }
+          ? {
+              ...i,
+              is_checked: !checked
+            }
           : i
       )
     )
+
   }
 
   async function addItem(text, category) {
+
     if (!text.trim()) return
 
-    const { data } = await supabase
-      .from('checklists')
-      .insert({
-        trip_id: tripId,
-        category,
-        item: text.trim()
-      })
-      .select()
-      .single()
+    const data = loadData()
 
-    if (data) {
-      setItems(prev => [...prev, data])
+    const newItem = {
+      id: crypto.randomUUID(),
+      trip_id: tripId,
+      category,
+      item: text.trim(),
+      is_checked: false,
+      created_at: new Date().toISOString()
     }
+
+    data.checklists.push(newItem)
+
+    saveData(data)
+
+    setItems(prev => [...prev, newItem])
+
   }
 
   async function deleteItem(id) {
-    await supabase
-      .from('checklists')
-      .delete()
-      .eq('id', id)
+
+    const data = loadData()
+
+    data.checklists =
+      data.checklists.filter(
+        i => i.id !== id
+      )
+
+    saveData(data)
 
     setItems(prev =>
-      prev.filter(i => i.id !== id)
+      prev.filter(
+        i => i.id !== id
+      )
     )
+
   }
 
   return {

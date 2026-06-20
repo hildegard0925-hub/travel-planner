@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { loadData, saveData } from '../services/storage.js'
 import { recalculateAllCosts } from './useSchedules.js'
-import { deleteRecordPhoto } from '../services/storage.js'
 import {
   recalculateAllRecordCosts
 } from './useRecords.js'
@@ -17,57 +16,73 @@ export function useTrips() {
   async function fetchTrips() {
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('trips')
-      .select('*')
-      .order('start_date', { ascending: false })
+    const data = loadData()
 
-    if (!error) setTrips(data)
+    setTrips(
+      [...data.trips].sort(
+        (a, b) =>
+          new Date(b.start_date) -
+          new Date(a.start_date)
+      )
+    )
 
     setLoading(false)
   }
 
   async function createTrip(values) {
-    const { data, error } = await supabase
-      .from('trips')
-      .insert(values)
-      .select()
-      .single()
 
-    if (!error) {
-      setTrips(prev => [data, ...prev])
+    const data = loadData()
+
+    const newTrip = {
+      id: crypto.randomUUID(),
+      ...values
     }
 
-    return { data, error }
+    data.trips.unshift(newTrip)
+
+    saveData(data)
+
+    setTrips(prev => [newTrip, ...prev])
+
+    return {
+      data: newTrip,
+      error: null
+    }
   }
 
   async function updateTrip(id, values) {
+
     const cleanValues = {
       ...values,
       exchange_rate: Number(values.exchange_rate)
     }
 
-    const { data, error } = await supabase
-      .from('trips')
-      .update(cleanValues)
-      .eq('id', id)
-      .select()
-      .single()
+    const data = loadData()
 
-    if (error) {
-      console.error('updateTrip error:', error)
-      return { error }
-    }
+    data.trips = data.trips.map(t =>
+      t.id === id
+        ? {
+            ...t,
+            ...cleanValues
+          }
+        : t
+    )
 
-    // trips 상태 업데이트
+    saveData(data)
+
     setTrips(prev =>
       prev.map(t =>
-        t.id === id ? data : t
+        t.id === id
+          ? {
+              ...t,
+              ...cleanValues
+            }
+          : t
       )
     )
 
-    // 환율 변경 시 비용 재계산
     if (cleanValues.exchange_rate) {
+
       await recalculateAllCosts(
         id,
         cleanValues.exchange_rate
@@ -77,52 +92,75 @@ export function useTrips() {
         id,
         cleanValues.exchange_rate
       )
+
     }
 
-    // 현재 trip 화면 갱신 (중요)
     await fetchTrips()
 
-    return { data }
+    return {
+      data: data.trips.find(t => t.id === id),
+      error: null
+    }
+
   }
 
   async function deleteTrip(id) {
+
     try {
-      // 1. 해당 여행의 기록 사진 목록 가져오기
-      const { data: records } = await supabase
-        .from('records')
-        .select('photo_url')
-        .eq('trip_id', id)
 
-      // 2. 사진 파일 먼저 삭제
-      if (records && records.length > 0) {
-        for (const r of records) {
-          if (r.photo_url) {
-            await deleteRecordPhoto(r.photo_url)
-          }
-        }
-      }
+      const data = loadData()
 
-      // 3. 여행 삭제 (CASCADE로 schedules / records 자동 삭제됨)
-      const { error } = await supabase
-        .from('trips')
-        .delete()
-        .eq('id', id)
-
-      if (!error) {
-        setTrips(prev =>
-          prev.filter(t => t.id !== id)
+      data.trips =
+        data.trips.filter(
+          t => t.id !== id
         )
-      }
 
-      return { error }
+      data.schedules =
+        data.schedules.filter(
+          s => s.trip_id !== id
+        )
+
+      data.records =
+        data.records.filter(
+          r => r.trip_id !== id
+        )
+
+      data.checklists =
+        data.checklists.filter(
+          c => c.trip_id !== id
+        )
+
+      saveData(data)
+
+      setTrips(prev =>
+        prev.filter(
+          t => t.id !== id
+        )
+      )
+
+      return {
+        error: null
+      }
 
     } catch (err) {
-      console.error(err)
-      return { error: err }
-    }
-  }
 
-  return { trips, loading, createTrip, updateTrip, deleteTrip, refresh: fetchTrips }
+      console.error(err)
+
+      return {
+        error: err
+      }
+
+    }
+
+  }
+  return {
+    trips,
+    loading,
+    createTrip,
+    updateTrip,
+    deleteTrip,
+    refresh: fetchTrips
+  }
 }
 
 export function useTrip(tripId) {
@@ -130,12 +168,20 @@ export function useTrip(tripId) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+
     if (!tripId) return
-    supabase.from('trips').select('*').eq('id', tripId).single()
-      .then(({ data, error }) => {
-        if (!error) setTrip(data)
-        setLoading(false)
-      })
+
+    const data = loadData()
+
+    const trip =
+      data.trips.find(
+        t => t.id === tripId
+      )
+
+    setTrip(trip || null)
+
+    setLoading(false)
+
   }, [tripId])
 
   return { trip, loading }

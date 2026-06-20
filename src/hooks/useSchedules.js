@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { loadData, saveData } from '../services/storage.js'
 
 export function useSchedules(tripId) {
   const [schedules, setSchedules] = useState([])
@@ -11,43 +11,109 @@ export function useSchedules(tripId) {
   }, [tripId])
 
   async function fetchSchedules() {
+
     setLoading(true)
-    const { data, error } = await supabase
-      .from('schedules')
-      .select('*')
-      .eq('trip_id', tripId)
-      .order('day_index')
-      .order('start_time')
-    if (!error) setSchedules(data)
+
+    const data = loadData()
+
+    const schedules =
+      data.schedules
+        .filter(
+          s => s.trip_id === tripId
+        )
+        .sort(byDayTime)
+
+    setSchedules(schedules)
+
     setLoading(false)
+
   }
 
   async function addSchedule(values) {
-    const { data, error } = await supabase
-      .from('schedules')
-      .insert({ ...values, trip_id: tripId })
-      .select()
-      .single()
-    if (!error) setSchedules(prev => [...prev, data].sort(byDayTime))
-    return { data, error }
+
+    const data = loadData()
+
+    const newSchedule = {
+      id: crypto.randomUUID(),
+      trip_id: tripId,
+      ...values
+    }
+
+    data.schedules.push(newSchedule)
+
+    saveData(data)
+
+    setSchedules(prev =>
+      [...prev, newSchedule].sort(byDayTime)
+    )
+
+    return {
+      data: newSchedule,
+      error: null
+    }
+
   }
 
   async function updateSchedule(id, values) {
-    const { data, error } = await supabase
-      .from('schedules')
-      .update(values)
-      .eq('id', id)
-      .select()
-      .single()
-    if (!error) setSchedules(prev =>
-      prev.map(s => s.id === id ? data : s).sort(byDayTime))
-    return { data, error }
+
+    const data = loadData()
+
+    data.schedules =
+      data.schedules.map(s =>
+        s.id === id
+          ? {
+              ...s,
+              ...values
+            }
+          : s
+      )
+
+    saveData(data)
+
+    setSchedules(prev =>
+      prev
+        .map(s =>
+          s.id === id
+            ? {
+                ...s,
+                ...values
+              }
+            : s
+        )
+        .sort(byDayTime)
+    )
+
+    return {
+      data:
+        data.schedules.find(
+          s => s.id === id
+        ),
+      error: null
+    }
+
   }
 
   async function deleteSchedule(id) {
-    const { error } = await supabase.from('schedules').delete().eq('id', id)
-    if (!error) setSchedules(prev => prev.filter(s => s.id !== id))
-    return { error }
+
+    const data = loadData()
+
+    data.schedules =
+      data.schedules.filter(
+        s => s.id !== id
+      )
+
+    saveData(data)
+
+    setSchedules(prev =>
+      prev.filter(
+        s => s.id !== id
+      )
+    )
+
+    return {
+      error: null
+    }
+
   }
 
   async function toggleDone(id, current) {
@@ -72,32 +138,36 @@ export function useSchedules(tripId) {
     toggleDone
   }
 }
-export async function recalculateAllCosts(tripId, newRate) {
-    const { data, error } = await supabase
-      .from('schedules')
-      .select('*')
-      .eq('trip_id', tripId)
+export async function recalculateAllCosts(
+  tripId,
+  newRate
+) {
 
-    if (error || !data) return
+  const data = loadData()
 
-    for (const item of data) {
+  data.schedules =
+    data.schedules.map(item => {
+
       if (
-        item.cost_local === null ||
-        item.cost_local === undefined ||
-        item.cost_local === 0
+        item.trip_id !== tripId ||
+        !item.cost_local
       ) {
-        continue
+        return item
       }
 
-      const newKrw =
-        Math.round(item.cost_local * newRate)
+      return {
+        ...item,
+        cost_krw:
+          Math.round(
+            item.cost_local * newRate
+          )
+      }
 
-      await supabase
-        .from('schedules')
-        .update({ cost_krw: newKrw })
-        .eq('id', item.id)
-    }
-  }
+    })
+
+  saveData(data)
+
+}
 
 function byDayTime(a, b) {
   if (a.day_index !== b.day_index) return a.day_index - b.day_index

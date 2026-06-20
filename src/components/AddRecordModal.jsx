@@ -3,10 +3,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { readPhotoDate, readPhotoGps } from '../utils/exif.js'
 import { compressImage } from '../utils/imageUtils'
-
-import { uploadRecordPhoto } from '../services/storage.js'
-import { deleteRecordPhoto } from '../services/storage.js'
-import { supabase } from '../lib/supabase.js'
+import { savePhoto } from '../services/photoStorage.js'
 
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
@@ -40,7 +37,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     cost_krw: initial?.cost_krw ?? '',
     payment_method: initial?.payment_method ?? 'card',
     memo: initial?.memo ?? '',
-    photo_url: initial?.photo_url ?? '',
+    photo_id: initial?.photo_id ?? null,
     actual_datetime: initial?.actual_datetime ?? null,
     day_index: initial?.day_index ?? 0,
     rating: initial?.rating ?? null,
@@ -50,7 +47,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
   // 수정 모달: 기존 사진을 초기값으로 바로 세팅
   const [photoFile, setPhotoFile] = useState(null)
-  const [photoPreview, setPhotoPreview] = useState(initial?.photo_url ?? null)
+  const [photoPreview, setPhotoPreview] = useState(null)
   const [exifDate, setExifDate] = useState(
     initial?.actual_datetime ? new Date(initial.actual_datetime) : null
   )
@@ -202,8 +199,22 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
               : null)
           : form.actual_datetime
 
+      let photoId = form.photo_id
+
+      if (photoFile) {
+
+        let fileToSave = photoFile
+
+        if (photoFile.size > 500 * 1024) {
+          fileToSave = await compressImage(photoFile)
+        }
+
+        photoId = await savePhoto(fileToSave)
+      }
+
       const result = await onSave({
         ...form,
+        photo_id: photoId,
 
         start_time: exifDate
           ? format(exifDate, 'HH:mm')
@@ -233,54 +244,6 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
           ? result.data[0]
           : result?.data
 
-        // 2. 새 사진 파일이 있을 때만 업로드
-        if (photoFile && savedRecord?.id) {
-
-          // 기존 사진이 있으면 먼저 삭제
-          if (initial?.photo_url) {
-            await deleteRecordPhoto(initial.photo_url)
-          }
-
-          let fileToUpload = photoFile
-
-          // 500KB 이상이면 압축
-          if (photoFile.size > 500 * 1024) {
-            fileToUpload = await compressImage(photoFile)
-          }
-
-          const url = await uploadRecordPhoto(
-            fileToUpload,
-            trip.id,
-            savedRecord.id
-          )
-
-          if (!url) {
-            alert('사진 업로드 실패')
-            setSaving(false)
-            return
-          }
-
-          await supabase
-          .from('records')
-          .update({
-            photo_url: url,
-            actual_datetime: finalDatetime
-          })
-          .eq('id', savedRecord.id)
-        }
-
-      // 3. 사진을 지웠을 때 (photoPreview=null, 기존 photo_url이 있었을 때)
-      if (!photoFile && !photoPreview && initial?.photo_url && savedRecord?.id) {
-
-        // 1. 스토리지 파일 삭제
-        await deleteRecordPhoto(initial.photo_url)
-
-        // 2. DB 업데이트
-        await supabase
-          .from('records')
-          .update({ photo_url: null })
-          .eq('id', savedRecord.id)
-      }
 
       if (onRefresh) await onRefresh()  // 데이터만 새로 불러오기
       onClose()
@@ -373,7 +336,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 <div style={{ position: 'relative' }}>
                   <img src={photoPreview} alt="기록 사진"
                     style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
-                  <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); set('photo_url', '') }}
+                  <button onClick={() => { setPhotoFile(null); setPhotoPreview(null); set('photo_id', '') }}
                     style={{
                       position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: '50%',
                       background: 'rgba(0,0,0,.5)', color: '#fff', fontSize: 14, display: 'flex',
