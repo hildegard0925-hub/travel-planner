@@ -8,7 +8,6 @@ import {
   exportBackup,
   importBackup
 } from '../services/backupService.js'
-import { migrateFromSupabase } from '../services/migrationService'
 
 const CURRENCY_FLAG = {
   KRW: '🇰🇷',
@@ -107,39 +106,6 @@ export default function Home() {
             onClick={() => setShowForm(true)}
           >
             + 새 여행
-          </button>
-
-          <button
-            className="btn"
-            onClick={async () => {
-
-              if (!confirm('Supabase 데이터를 가져올까요?')) {
-                return
-              }
-
-              const result =
-                await migrateFromSupabase()
-
-              if (result.success) {
-
-                alert(
-                  `이관 완료!\n사진 ${result.photoCount}장`
-                )
-
-                window.location.reload()
-
-              } else {
-
-                alert(
-                  '이관 실패\n' +
-                  result.error
-                )
-
-              }
-
-            }}
-          >
-            ☁️ 데이터 가져오기
           </button>
 
           <button

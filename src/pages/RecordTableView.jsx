@@ -82,8 +82,27 @@ export default function TripTableView({
       if (a.day_index !== b.day_index)
         return a.day_index - b.day_index
 
-      const ta = a.start_time || a.schedule_time || '99:99'
-      const tb = b.start_time || b.schedule_time || '99:99'
+      const ta =
+        a.start_time ||
+        a.schedule_time ||
+        (
+          a.actual_datetime
+            ? new Date(a.actual_datetime)
+                .toTimeString()
+                .slice(0, 5)
+            : '99:99'
+        )
+
+      const tb =
+        b.start_time ||
+        b.schedule_time ||
+        (
+          b.actual_datetime
+            ? new Date(b.actual_datetime)
+                .toTimeString()
+                .slice(0, 5)
+            : '99:99'
+        )
 
       return ta.localeCompare(tb)
     })
