@@ -386,7 +386,7 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
           alt={record.title}
           onClick={(e) => {
             e.stopPropagation()
-            setViewerUrl(record.photo_id)
+            setViewerUrl(photoUrl)
           }}
           style={{
             width: '100%',
