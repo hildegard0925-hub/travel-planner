@@ -302,8 +302,35 @@ export default function MapView() {
                   onDoubleClick={(e) => {
                     e.stopPropagation()
                     setFullPhoto(
-                      record.photoUrl || record.photoUrl
+                      record.photoUrl || record.photo_url
                     )
+                  }}
+                  onClick={(e) => {
+
+                    setSelectedItem(record)
+
+                    if (
+                      record.photoUrl ||
+                      record.photo_url
+                    ) {
+
+                      const now = Date.now()
+
+                      if (
+                        record._lastTap &&
+                        now - record._lastTap < 300
+                      ) {
+
+                        setFullPhoto(
+                          record.photoUrl || record.photo_url
+                        )
+
+                      }
+
+                      record._lastTap = now
+
+                    }
+
                   }}
                   style={{
                     width: 46,
@@ -361,42 +388,42 @@ export default function MapView() {
               <div>
                 
                 <div style={{ fontWeight: 500 }}>
-                  {selectedItem.photo_url
-                    ? (selectedItem.start_time?.slice(0, 5) + ' ')
-                    : selectedItem.indices
-                      ? selectedItem.indices.join(', ') + '번 '
-                      : (displayItems.findIndex(i => i.id === selectedItem.id) + 1) + '번 '
-                  }
+                  {selectedItem.indices
+                    ? selectedItem.indices.join(', ') + '번 '
+                    : (photoMarkers.findIndex(r => r.id === selectedItem.id) + 1) + '번 '}
                   {selectedItem.title}
                 </div>
-                {selectedItem.address && (
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text2)',
+                    marginTop: 2
+                  }}
+                >
+                  {selectedItem.start_time?.slice(0, 5)}
+
+                  {selectedItem.rating > 0 && (
+                    <span style={{ marginLeft: 8 }}>
+                      {'⭐'.repeat(selectedItem.rating)}
+                    </span>
+                  )}
+                </div>
+
+                {selectedItem.description && (
                   <div
-                    onClick={() => {
-                      const origin = position
-                        ? `${position.lat},${position.lng}`
-                        : ''
-
-                      const destination = selectedItem.lat && selectedItem.lng
-                        ? `${selectedItem.lat},${selectedItem.lng}`
-                        : encodeURIComponent(selectedItem.address || selectedItem.title)
-
-                      window.open(
-                        `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=w`,
-                        '_blank'
-                      )
+                    style={{
+                      fontSize: 13,
+                      marginTop: 6,
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: 1.4
                     }}
-                    style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, cursor: 'pointer', textDecoration: 'underline' }}
                   >
-                    {selectedItem.address}
+                    {selectedItem.description}
                   </div>
                 )}
-                {selectedItem.start_time && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 0 }}>{selectedItem.start_time?.slice(0, 5)}</div>}
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {selectedItem.photo_url && (
-                  <button onClick={() => setFullPhoto(selectedItem.photo_url)}
-                    style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>📷</button>
-                )}
                 <button onClick={() => setSelectedItem(null)}
                   style={{ fontSize: 18, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
               </div>
