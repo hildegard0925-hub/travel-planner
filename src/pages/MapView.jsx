@@ -7,6 +7,7 @@ import { useRecords } from '../hooks/useRecords.js'
 import { useGeolocation } from '../hooks/useGeolocation.js'
 import { addDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import { getPhotoUrl } from '../services/photoStorage'
 
 const CAT_COLOR = {
   food: '#d4622a', transport: '#2a6dd4', shopping: '#9b2ad4',
@@ -34,6 +35,7 @@ export default function MapView() {
     !isNaN(Number(r.lat)) &&
     !isNaN(Number(r.lng))
   )
+  const [photoMarkers, setPhotoMarkers] = useState([])
   const {
     position,
     heading,
@@ -67,6 +69,33 @@ export default function MapView() {
       }
     }
   }, [focusLat, focusLng, schedules])
+
+  useEffect(() => {
+
+    async function loadPhotoMarkers() {
+
+      const newMarkers = await Promise.all(
+
+        photoMarkers.map(async record => ({
+
+          ...record,
+
+          photoUrl:
+            !record.photoUrl && record.photo_id
+              ? await getPhotoUrl(record.photo_id)
+              : record.photoUrl
+
+        }))
+
+      )
+
+      setPhotoMarkers(newMarkers)
+
+    }
+
+    loadPhotoMarkers()
+
+  }, [records, selectedDay])
   const [selectedItem, setSelectedItem] = useState(null)
   const [fullPhoto, setFullPhoto] = useState(null)
   const [layer, setLayer] = useState('schedule') // 'schedule' | 'record' | 'all'
@@ -237,7 +266,7 @@ export default function MapView() {
           })}
           
           {/* 사진 핀 (기록) */}
-          {(layer === 'all' || layer === 'record') && photoRecords.map((record, idx) => {
+          {(layer === 'all' || layer === 'record') && photoMarkers.map((record, idx) => {
             const pos = offsetPosition(photoRecords, record, idx, 0.00035)
 
             return (
@@ -250,7 +279,9 @@ export default function MapView() {
                 <div
                   onDoubleClick={(e) => {
                     e.stopPropagation()
-                    setFullPhoto(record.photo_url)
+                    setFullPhoto(
+                      record.photoUrl || record.photoUrl
+                    )
                   }}
                   style={{
                     width: 46,
@@ -263,7 +294,7 @@ export default function MapView() {
                   }}
                 >
                   <img
-                    src={record.photo_url}
+                    src={record.photoUrl || record.photoUrl}
                     alt={record.title}
                     style={{
                       width: '100%',
