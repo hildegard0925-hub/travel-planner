@@ -168,10 +168,35 @@ export function useRecords(tripId) {
 }
 
 function byDayDate(a, b) {
-  if (a.day_index !== b.day_index) return a.day_index - b.day_index
-  const da = a.actual_datetime ? new Date(a.actual_datetime) : new Date(a.created_at)
-  const db = b.actual_datetime ? new Date(b.actual_datetime) : new Date(b.created_at)
-  return da - db
+
+  if (a.day_index !== b.day_index) {
+    return a.day_index - b.day_index
+  }
+
+  const ta =
+    a.start_time ||
+    a.schedule_time ||
+    (
+      a.actual_datetime
+        ? new Date(a.actual_datetime)
+            .toTimeString()
+            .slice(0, 5)
+        : '99:99'
+    )
+
+  const tb =
+    b.start_time ||
+    b.schedule_time ||
+    (
+      b.actual_datetime
+        ? new Date(b.actual_datetime)
+            .toTimeString()
+            .slice(0, 5)
+        : '99:99'
+    )
+
+  return ta.localeCompare(tb)
+
 }
 
 export async function recalculateAllRecordCosts(
