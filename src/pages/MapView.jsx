@@ -74,20 +74,41 @@ export default function MapView() {
 
     async function loadPhotoMarkers() {
 
-      const newMarkers = await Promise.all(
-
-        photoMarkers.map(async record => ({
-
-          ...record,
-
-          photoUrl:
-            !record.photoUrl && record.photo_id
-              ? await getPhotoUrl(record.photo_id)
-              : record.photoUrl
-
-        }))
-
+      const source = (
+        selectedDay === null
+          ? records
+          : records.filter(
+              r => r.day_index === selectedDay
+            )
       )
+      .filter(
+        r =>
+          (r.photo_id || r.photo_url) &&
+          r.lat != null &&
+          r.lng != null &&
+          !isNaN(Number(r.lat)) &&
+          !isNaN(Number(r.lng))
+      )
+
+      const newMarkers =
+        await Promise.all(
+
+          source.map(async record => ({
+
+            ...record,
+
+            photoUrl:
+              record.photo_url
+                ? record.photo_url
+                : (
+                    record.photo_id
+                      ? await getPhotoUrl(record.photo_id)
+                      : null
+                  )
+
+          }))
+
+        )
 
       setPhotoMarkers(newMarkers)
 
