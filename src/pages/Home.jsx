@@ -149,9 +149,34 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 4
+                    }}
+                  >
                     <span style={{ fontSize: 22 }}>{flag}</span>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 18 }}>{trip.title}</span>
+
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 18
+                      }}
+                    >
+                      {trip.title}
+                    </span>
+
+                    {trip.share_code && (
+                      <span
+                        style={{
+                          fontSize: 15
+                        }}
+                      >
+                        🌐
+                      </span>
+                    )}
                   </div>
                   <p style={{ fontSize: 13, color: 'var(--text2)' }}>{trip.destination}</p>
                 </div>

@@ -1,27 +1,37 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { useShare } from '../contexts/ShareContext'
 
 export function useRecords(tripId) {
+
+  const sharedData = useShare()
+
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!tripId) return
+
+    if (!tripId && !sharedData) return
+
     fetchRecords()
-  }, [tripId])
+
+  }, [tripId, sharedData])
 
   async function fetchRecords() {
 
     setLoading(true)
 
-    const data = loadData()
+    const data =
+      sharedData || loadData()
 
     const records =
-      data.records
-        .filter(
-          r => r.trip_id === tripId
-        )
-        .sort(byDayDate)
+      sharedData
+        ? (data.records || []).sort(byDayDate)
+        : (data.records || [])
+            .filter(
+              r => r.trip_id === tripId
+            )
+            .sort(byDayDate)
 
     setRecords(records)
 

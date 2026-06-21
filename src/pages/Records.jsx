@@ -16,6 +16,10 @@ const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', act
 export default function Records() {
   const { tripId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const isShareMode =
+    location.pathname.startsWith('/share/')
   const [currentDay, setCurrentDay] = useState(0)
   const dayRefs = useRef([])
   const { trip } = useTrip(tripId)
@@ -150,13 +154,15 @@ export default function Records() {
         </h1>
 
         {/* 추가 버튼 */}
-        <button
-          className="btn btn-primary"
-          style={{ padding: '7px 12px', fontSize: 13 }}
-          onClick={() => setShowAdd(true)}
-        >
-          + 추가
-        </button>
+        {!isShareMode && (
+          <button
+            className="btn btn-primary"
+            style={{ padding: '7px 12px', fontSize: 13 }}
+            onClick={() => setShowAdd(true)}
+          >
+            + 추가
+          </button>
+        )}
 
       </div>
 
@@ -241,7 +247,11 @@ export default function Records() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {dayRecords.map(record => (
-                  <RecordCard key={record.id} record={record} trip={trip}
+                  <RecordCard
+                    key={record.id}
+                    record={record}
+                    trip={trip}
+                    isShareMode={isShareMode}
                     onEdit={() => setEditItem(record)}
                     onUpdate={(id, vals) => updateRecord(id, vals)}
                     onDelete={async () => {
@@ -286,14 +296,24 @@ export default function Records() {
   )
 }
 
-function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
+function RecordCard({
+  record,
+  trip,
+  isShareMode,
+  onEdit,
+  onUpdate,
+  onDelete
+}) {
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [photoError, setPhotoError] = useState(false)
 
   useEffect(() => {
 
     let objectUrl = null
 
     async function loadPhoto() {
+
+      setPhotoError(false)
 
       if (!record.photo_id) {
         setPhotoUrl(null)
@@ -304,6 +324,7 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
 
       if (!blob) {
         setPhotoUrl(null)
+        setPhotoError(true)
         return
       }
 
@@ -381,21 +402,36 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
 
       {/* 사진: 펼쳐졌을 때만 표시 */}
       {expanded && record.photo_id && (
-        <img
-          src={photoUrl}
-          alt={record.title}
-          onClick={(e) => {
-            e.stopPropagation()
-            setViewerUrl(photoUrl)
-          }}
-          style={{
-            width: '100%',
-            maxHeight: 260,
-            objectFit: 'cover',
-            display: 'block',
-            cursor: 'zoom-in'
-          }}
-        />
+        !photoUrl || photoError ? (
+          <div
+            style={{
+              padding: '30px 16px',
+              textAlign: 'center',
+              color: 'var(--text3)',
+              fontSize: 13,
+              borderBottom: '1px solid var(--border)'
+            }}
+          >
+            🔒 사진은 작성자만 볼 수 있습니다.
+          </div>
+        ) : (
+          <img
+            src={photoUrl}
+            alt={record.title}
+            onError={() => setPhotoError(true)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setViewerUrl(photoUrl)
+            }}
+            style={{
+              width: '100%',
+              maxHeight: 260,
+              objectFit: 'cover',
+              display: 'block',
+              cursor: 'zoom-in'
+            }}
+          />
+        )
       )}
 
       <div style={{ padding: '5px 12px' }}>
@@ -528,12 +564,40 @@ function RecordCard({ record, trip, onEdit, onDelete, onUpdate }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
-                onClick={e => { e.stopPropagation(); onEdit() }}>수정</button>
-              <button onClick={e => { e.stopPropagation(); onDelete() }}
-                style={{ fontSize: 12, padding: '6px 12px', color: '#e53935', background: 'none', border: '1px solid #ffcdd2', borderRadius: 8, cursor: 'pointer' }}>
-                삭제
-              </button>
+
+              {!isShareMode && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: 12, padding: '6px 12px' }}
+                  onClick={e => {
+                    e.stopPropagation()
+                    onEdit()
+                  }}
+                >
+                  수정
+                </button>
+              )}
+
+              {!isShareMode && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    onDelete()
+                  }}
+                  style={{
+                    fontSize: 12,
+                    padding: '6px 12px',
+                    color: '#e53935',
+                    background: 'none',
+                    border: '1px solid #ffcdd2',
+                    borderRadius: 8,
+                    cursor: 'pointer'
+                  }}
+                >
+                  삭제
+                </button>
+              )}
+
             </div>
           </div>
         )}

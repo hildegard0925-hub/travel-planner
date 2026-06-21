@@ -6,19 +6,31 @@ import MapView from './pages/MapView.jsx'
 import CostSummary from './pages/CostSummary.jsx'
 import Checklist from './pages/Checklist.jsx'
 import Records from './pages/Records.jsx'
+import ShareTrip from './pages/ShareTrip.jsx'
+import ShareLayout from './pages/ShareLayout.jsx'
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
+
         <Route path="trip/:tripId" element={<TripDetail />} />
         <Route path="trip/:tripId/map" element={<MapView />} />
         <Route path="trip/:tripId/cost" element={<CostSummary />} />
         <Route path="trip/:tripId/checklist" element={<Checklist />} />
         <Route path="trip/:tripId/records" element={<Records />} />
+
+        <Route path="share/:code" element={<ShareLayout />}>
+          <Route index element={<ShareTrip />} />
+          <Route path="map" element={<MapView />} />
+          <Route path="cost" element={<CostSummary />} />
+          <Route path="checklist" element={<Checklist />} />
+          <Route path="records" element={<Records />} />
+        </Route>
       </Route>
+
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+     </Routes>
   )
 }

@@ -12,9 +12,18 @@ const NAV_ITEMS = [
 export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { tripId } = useParams()
-  const basePath = tripId ? `/trip/${tripId}` : null
+  const { tripId, code } = useParams()
+
+  const basePath =
+    tripId
+      ? `/trip/${tripId}`
+      : code
+        ? `/share/${code}`
+        : null
   const activePath = location.pathname
+
+  const isShareMode =
+    location.pathname.startsWith('/share/')
 
   const handleNav = (item) => {
     if (item.path === '/') {
@@ -45,7 +54,12 @@ export default function Layout() {
         alignItems: 'center',
         zIndex: 20,
       }}>
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS
+          .filter(
+            item =>
+              !(isShareMode && item.path === '/')
+          )
+          .map((item) => {
           const dest = item.path === '/'
             ? '/'
             : item.path === 'schedule'
@@ -53,7 +67,7 @@ export default function Layout() {
               : basePath ? `${basePath}/${item.path}` : null
 
           const isActive = dest && activePath === dest
-          const disabled = item.path !== '/' && !tripId
+          const disabled = item.path !== '/' && !basePath
 
           return (
             <button

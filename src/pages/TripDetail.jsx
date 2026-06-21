@@ -8,6 +8,11 @@ import { ko } from 'date-fns/locale'
 import AddScheduleModal from '../components/AddScheduleModal.jsx'
 import TripTableView from './TripTableView.jsx'
 import { linkify } from '../utils/linkify'
+import {
+  createTripShare,
+  deleteShare,
+  APP_URL
+} from '../services/shareService'
 
 const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '액티비티', lodging: '숙소', etc: '기타' }
@@ -25,8 +30,13 @@ export default function TripDetail() {
   const { tripId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+  const isShareMode = location.pathname.startsWith('/share/')
   const { trip, loading: tripLoading } = useTrip(tripId)
-  const { deleteTrip, updateTrip } = useTrips()
+  const {
+    deleteTrip,
+    updateTrip,
+    updateTripShareCode
+  } = useTrips()
   const { byDay, loading: schLoading, addSchedule, updateSchedule, deleteSchedule, toggleDone } = useSchedules(tripId)
   const { copyFromSchedule } = useRecords(tripId)
   const [selectedDay, setSelectedDay] = useState(0)
@@ -37,9 +47,18 @@ export default function TripDetail() {
   const [showMenu, setShowMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditTrip, setShowEditTrip] = useState(false)
+  const [shareCode, setShareCode] = useState('')
 
   const params = new URLSearchParams(location.search)
   const focusDay = params.get('day')
+
+  useEffect(() => {
+
+    setShareCode(
+      trip?.share_code || ''
+    )
+
+  }, [trip])
 
   useEffect(() => {
     if (focusDay !== null) setSelectedDay(Number(focusDay))
@@ -114,13 +133,15 @@ export default function TripDetail() {
         }}>
           {trip.title}
         </h1>
-        <button
-          className="btn-ghost"
-          style={{ fontSize: 18 }}
-          onClick={() => setShowMenu(true)}
-        >
-          ⋯
-        </button>
+        {!isShareMode && (
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 18 }}
+            onClick={() => setShowMenu(true)}
+          >
+            ⋯
+          </button>
+        )}
       </div>
 
       {/* sticky 묶음 시작 */}
@@ -174,8 +195,15 @@ export default function TripDetail() {
           <div style={{ fontWeight: 500 }}>{format(dayDate, 'M월 d일 (EEE)', { locale: ko })}</div>
           {dayTotal > 0 && <div style={{ fontSize: 12, color: 'var(--text3)' }}>오늘 지출 {dayTotal.toLocaleString()}원</div>}
         </div>
-        <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}
-          onClick={() => setShowAdd(true)}>+ 추가</button>
+        {!isShareMode && (
+          <button
+            className="btn btn-primary"
+            style={{ padding: '8px 14px', fontSize: 13 }}
+            onClick={() => setShowAdd(true)}
+          >
+            + 추가
+          </button>
+        )}
       </div>
       </div>
       {/* sticky 묶음 끝 */}
@@ -216,6 +244,7 @@ export default function TripDetail() {
               trip={trip}
               navigate={navigate}
               isLast={idx === dayItems.length - 1}
+              isShareMode={isShareMode}
               onToggle={() => handleToggleDone(item)}
               onEdit={() => setEditItem(item)}
               onDelete={() => {
@@ -258,7 +287,7 @@ export default function TripDetail() {
 
             <button
               className="btn btn-secondary"
-              style={{ width: '100%', marginBottom: 8 }}
+              style={{ width: '100%', marginBottom: 12 }}
               onClick={() => {
                 setShowMenu(false)
                 setShowEditTrip(true)
@@ -266,6 +295,72 @@ export default function TripDetail() {
             >
               환율 수정
             </button>
+
+            <button
+              className="btn"
+              style={{
+                width: '100%',
+                marginBottom: 12,
+                background: '#ecfaf6',
+                border: '1px solid #d7eee8',
+                color: '#000'
+              }}
+              onClick={async () => {
+
+                const result =
+                  await createTripShare(tripId)
+
+                await updateTripShareCode(
+                  tripId,
+                  result.code
+                )
+
+                setShareCode(result.code)
+
+                const url =
+                  `${APP_URL}/share/${result.code}`
+
+                await navigator.clipboard.writeText(url)
+
+                alert('공유 링크가 복사되었습니다.')
+
+              }}
+            >
+              🌐 여행 공유
+            </button>
+
+            {shareCode && (
+              <button
+                className="btn"
+                style={{
+                  width: '100%',
+                  marginBottom: 12,
+                  background: '#ecfaf6',
+                  border: '1px solid #d7eee8',
+                  color: '#000'
+                }}
+                onClick={async () => {
+
+                  if (!confirm('공유를 해제할까요?')) return
+
+                  await deleteShare(shareCode)
+
+                  await updateTripShareCode(
+                    tripId,
+                    ''
+                  )
+
+                  setShareCode('')
+
+                  alert('공유가 해제되었습니다.')
+
+                  setShowMenu(false)
+
+                }}
+              >
+                🔒 공유 해제
+              </button>
+            )}
 
             <button
               className="btn"
@@ -359,7 +454,8 @@ function ScheduleRow({
   isLast,
   onToggle,
   onEdit,
-  onDelete
+  onDelete,
+  isShareMode
 }) {
   const [expanded, setExpanded] = useState(false)
   const emoji = CAT_EMOJI[item.category] ?? '📌'
@@ -467,14 +563,53 @@ function ScheduleRow({
             </div>
             {item.memo && <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>{linkify(item.memo)}</p>}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
-                onClick={e => { e.stopPropagation(); onToggle() }}>
-                {item.is_done ? '↩ 되돌리기' : '✓ 완료'}
-              </button>
-              <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
-                onClick={e => { e.stopPropagation(); onEdit() }}>수정</button>
-              <button onClick={e => { e.stopPropagation(); if (confirm('삭제할까요?')) onDelete() }}
-                style={{ fontSize: 12, padding: '6px 12px', color: '#e53935', background: 'none', border: '1px solid #ffcdd2', borderRadius: 8, cursor: 'pointer' }}>삭제</button>
+
+              {!isShareMode && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: 12, padding: '6px 12px' }}
+                  onClick={e => {
+                    e.stopPropagation()
+                    onToggle()
+                  }}
+                >
+                  {item.is_done ? '↩ 되돌리기' : '✓ 완료'}
+                </button>
+              )}
+
+              {!isShareMode && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: 12, padding: '6px 12px' }}
+                  onClick={e => {
+                    e.stopPropagation()
+                    onEdit()
+                  }}
+                >
+                  수정
+                </button>
+              )}
+
+              {!isShareMode && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (confirm('삭제할까요?')) onDelete()
+                  }}
+                  style={{
+                    fontSize: 12,
+                    padding: '6px 12px',
+                    color: '#e53935',
+                    background: 'none',
+                    border: '1px solid #ffcdd2',
+                    borderRadius: 8,
+                    cursor: 'pointer'
+                  }}
+                >
+                  삭제
+                </button>
+              )}
+
             </div>
           </div>
         )}

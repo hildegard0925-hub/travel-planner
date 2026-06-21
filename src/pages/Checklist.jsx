@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useChecklist } from '../hooks/useChecklist.js'
 
 const DEFAULT_CATEGORIES = ['서류', '의류', '세면도구', '전자기기', '약/비상용품', '기타']
@@ -23,6 +23,10 @@ export default function Checklist() {
     deleteItem
   } = useChecklist(tripId)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const isShareMode =
+    location.pathname.startsWith('/share/')
   const [newItem, setNewItem] = useState({ text: '', cat: '기타' })
   const [adding, setAdding] = useState(false)
 
@@ -40,7 +44,15 @@ export default function Checklist() {
       <div className="top-header">
         <button className="btn-ghost" onClick={() => navigate(`/trip/${tripId}`)}>←</button>
         <h1>준비물</h1>
-        <button className="btn-ghost" style={{ fontSize: 13 }} onClick={() => setAdding(true)}>+ 추가</button>
+        {!isShareMode && (
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 13 }}
+            onClick={() => setAdding(true)}
+          >
+            + 추가
+          </button>
+        )}
       </div>
 
       <div style={{ padding: 16 }}>
@@ -71,12 +83,16 @@ export default function Checklist() {
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🧳</div>
             <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 20 }}>준비물 목록이 없어요.</p>
-            <button
-              className="btn btn-primary"
-              onClick={() =>
-                addDefaults(DEFAULT_ITEMS)
-              }
-            >기본 준비물 불러오기</button>
+            {!isShareMode && (
+              <button
+                className="btn btn-primary"
+                onClick={() =>
+                  addDefaults(DEFAULT_ITEMS)
+                }
+              >
+                기본 준비물 불러오기
+              </button>
+            )}
           </div>
         )}
 
@@ -103,7 +119,11 @@ export default function Checklist() {
                       opacity: item.is_checked ? 0.5 : 1,
                       cursor: 'pointer',
                     }}
-                    onClick={() => toggle(item.id, item.is_checked)}
+                    onClick={() => {
+                      if (!isShareMode) {
+                        toggle(item.id, item.is_checked)
+                      }
+                    }}
                   >
                     <div style={{
                       width: 20, height: 20, borderRadius: 6, flexShrink: 0,
@@ -118,8 +138,14 @@ export default function Checklist() {
                       flex: 1, fontSize: 14,
                       textDecoration: item.is_checked ? 'line-through' : 'none',
                     }}>{item.item}</span>
-                    <button onClick={e => { e.stopPropagation(); deleteItem(item.id) }}
+                    {!isShareMode && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation()
+                          deleteItem(item.id)
+                        }}
                       style={{ fontSize: 16, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>×</button>
+                      )}
                   </div>
                 ))}
               </div>
@@ -127,7 +153,7 @@ export default function Checklist() {
           )
         })}
 
-        {items.length > 0 && (
+        {!isShareMode && items.length > 0 && (
           <div style={{ textAlign: 'center', marginTop: 8 }}>
             <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() =>
               addDefaults(DEFAULT_ITEMS)
@@ -137,7 +163,7 @@ export default function Checklist() {
       </div>
 
       {/* 항목 추가 모달 */}
-      {adding && (
+      {!isShareMode && adding && (
         <div className="modal-overlay" onClick={() => setAdding(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />

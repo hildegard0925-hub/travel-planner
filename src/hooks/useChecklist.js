@@ -1,36 +1,53 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { useShare } from '../contexts/ShareContext'
 
 export function useChecklist(tripId) {
+
+  const sharedData = useShare()
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (tripId) {
-      fetchItems()
-    }
-  }, [tripId])
+
+    if (!tripId && !sharedData) return
+
+    fetchItems()
+
+  }, [tripId, sharedData])
 
   async function fetchItems() {
 
     setLoading(true)
 
-    const data = loadData()
+    const data =
+      sharedData || loadData()
 
     const items =
-      data.checklists
-        .filter(
-          item => item.trip_id === tripId
-        )
-        .sort((a, b) => {
+      sharedData
+        ? (data.checklists || []).sort((a, b) => {
 
-          if (a.category !== b.category) {
-            return a.category.localeCompare(b.category)
-          }
+            if (a.category !== b.category) {
+              return a.category.localeCompare(b.category)
+            }
 
-          return new Date(a.created_at) - new Date(b.created_at)
+            return new Date(a.created_at) - new Date(b.created_at)
 
-        })
+          })
+        : (data.checklists || [])
+            .filter(
+              item => item.trip_id === tripId
+            )
+            .sort((a, b) => {
+
+              if (a.category !== b.category) {
+                return a.category.localeCompare(b.category)
+              }
+
+              return new Date(a.created_at) - new Date(b.created_at)
+
+            })
 
     setItems(items)
 

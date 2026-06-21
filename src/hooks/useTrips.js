@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { useShare } from '../contexts/ShareContext'
 import { recalculateAllCosts } from './useSchedules.js'
-import {
-  recalculateAllRecordCosts
-} from './useRecords.js'
+import { recalculateAllRecordCosts } from './useRecords.js'
 
 export function useTrips() {
   const [trips, setTrips] = useState([])
@@ -35,6 +34,7 @@ export function useTrips() {
 
     const newTrip = {
       id: crypto.randomUUID(),
+      share_code: '',
       ...values
     }
 
@@ -153,25 +153,60 @@ export function useTrips() {
     }
 
   }
+  async function updateTripShareCode(id, shareCode) {
+
+    const data = loadData()
+
+    data.trips = data.trips.map(t =>
+      t.id === id
+        ? {
+            ...t,
+            share_code: shareCode
+          }
+        : t
+    )
+
+    saveData(data)
+
+    await fetchTrips()
+
+  }
+
   return {
     trips,
     loading,
     createTrip,
     updateTrip,
+    updateTripShareCode,
     deleteTrip,
     refresh: fetchTrips
   }
 }
 
 export function useTrip(tripId) {
+
+  const sharedData = useShare()
+
   const [trip, setTrip] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
 
-    if (!tripId) return
+    const data =
+      sharedData || loadData()
 
-    const data = loadData()
+    if (sharedData?.trip) {
+
+      setTrip(sharedData.trip)
+      setLoading(false)
+      return
+
+    }
+
+    if (!tripId) {
+      setLoading(false)
+      return
+    }
 
     const trip =
       data.trips.find(
@@ -182,7 +217,7 @@ export function useTrip(tripId) {
 
     setLoading(false)
 
-  }, [tripId])
+  }, [tripId, sharedData])
 
   return { trip, loading }
 }

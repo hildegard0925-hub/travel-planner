@@ -1,27 +1,37 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { useShare } from '../contexts/ShareContext'
 
 export function useSchedules(tripId) {
+
+  const sharedData = useShare()
+
   const [schedules, setSchedules] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!tripId) return
+
+    if (!tripId && !sharedData) return
+
     fetchSchedules()
-  }, [tripId])
+
+  }, [tripId, sharedData])
 
   async function fetchSchedules() {
 
     setLoading(true)
 
-    const data = loadData()
+    const data =
+      sharedData || loadData()
 
     const schedules =
-      data.schedules
-        .filter(
-          s => s.trip_id === tripId
-        )
-        .sort(byDayTime)
+      sharedData
+        ? (data.schedules || []).sort(byDayTime)
+        : (data.schedules || [])
+            .filter(
+              s => s.trip_id === tripId
+            )
+            .sort(byDayTime)
 
     setSchedules(schedules)
 
