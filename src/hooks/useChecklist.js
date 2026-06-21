@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { updateTripShare } from '../services/shareService'
 import { useShare } from '../contexts/ShareContext'
 
 export function useChecklist(tripId) {
@@ -82,6 +83,8 @@ export function useChecklist(tripId) {
 
     saveData(data)
 
+    await updateTripShare(tripId)
+
     fetchItems()
 
   }
@@ -101,6 +104,8 @@ export function useChecklist(tripId) {
       )
 
     saveData(data)
+
+    await updateTripShare(tripId)
 
     setItems(prev =>
       prev.map(i =>
@@ -134,6 +139,8 @@ export function useChecklist(tripId) {
 
     saveData(data)
 
+    await updateTripShare(tripId)
+
     setItems(prev => [...prev, newItem])
 
   }
@@ -148,6 +155,8 @@ export function useChecklist(tripId) {
       )
 
     saveData(data)
+
+    await updateTripShare(tripId)
 
     setItems(prev =>
       prev.filter(

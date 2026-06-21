@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { loadData, saveData } from '../services/storage.js'
+import { updateTripShare } from '../services/shareService'
 import { useShare } from '../contexts/ShareContext'
 
 export function useRecords(tripId) {
@@ -54,6 +55,8 @@ export function useRecords(tripId) {
 
     saveData(data)
 
+    await updateTripShare(tripId)
+
     setRecords(prev =>
       [...prev, newRecord].sort(byDayDate)
     )
@@ -80,6 +83,8 @@ export function useRecords(tripId) {
       )
 
     saveData(data)
+
+    await updateTripShare(tripId)
 
     setRecords(prev =>
       prev
@@ -116,6 +121,8 @@ export function useRecords(tripId) {
         )
 
       saveData(data)
+
+      await updateTripShare(tripId)
 
       setRecords(prev =>
         prev.filter(

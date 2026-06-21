@@ -3,6 +3,7 @@ import { loadData, saveData } from '../services/storage.js'
 import { useShare } from '../contexts/ShareContext'
 import { recalculateAllCosts } from './useSchedules.js'
 import { recalculateAllRecordCosts } from './useRecords.js'
+import { updateTripShare } from '../services/shareService'
 
 export function useTrips() {
   const [trips, setTrips] = useState([])
@@ -94,6 +95,8 @@ export function useTrips() {
       )
 
     }
+
+    await updateTripShare(id)
 
     await fetchTrips()
 

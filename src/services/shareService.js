@@ -95,3 +95,55 @@ export async function createTripShare(tripId) {
 
   return result
 }
+
+export async function updateTripShare(tripId) {
+
+  const data = loadData()
+
+  const trip =
+    data.trips.find(
+      t => t.id === tripId
+    )
+
+  if (!trip?.share_code) {
+    return
+  }
+
+  const schedules =
+    data.schedules.filter(
+      s => s.trip_id === tripId
+    )
+
+  const records =
+    data.records.filter(
+      r => r.trip_id === tripId
+    )
+
+  const checklists =
+    data.checklists.filter(
+      c => c.trip_id === tripId
+    )
+
+  const response = await fetch(
+    `${API_URL}/share/${trip.share_code}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        trip,
+        schedules,
+        records,
+        checklists
+      })
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('공유 갱신 실패')
+  }
+
+  return response.json()
+
+}
