@@ -7,7 +7,7 @@ import { useRecords } from '../hooks/useRecords.js'
 import { useGeolocation } from '../hooks/useGeolocation.js'
 import { addDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { getPhotoUrl } from '../services/photoStorage'
+import { getPhotoUrl } from '../services/photoStorage.js'
 
 const CAT_COLOR = {
   food: '#d4622a', transport: '#2a6dd4', shopping: '#9b2ad4',
