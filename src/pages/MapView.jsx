@@ -278,6 +278,8 @@ export default function MapView() {
                   border: '2px solid white',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
+                  fontFamily: 'MJ Whale Sans, sans-serif',
+                  fontSize: 12,
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 700 }}>{item.indices.join(', ')}</span>
                   <span style={{ fontSize: 11 }}>{CAT_LABEL[item.category] ?? '기타'}</span>
