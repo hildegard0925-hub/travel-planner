@@ -417,9 +417,15 @@ export default function MapView() {
                     textDecoration: 'underline'
                   }}
                 >
-                  {selectedItem.indices
-                    ? selectedItem.indices.join(', ') + '번 '
-                    : (photoMarkers.findIndex(r => r.id === selectedItem.id) + 1) + '번 '}
+                  {
+                    selectedItem.indices
+                      ? selectedItem.indices.join(', ') + '번 '
+                      : (
+                          schedules.findIndex(
+                            s => s.id === selectedItem.id
+                          ) + 1
+                        ) + '번 '
+                  }
                   {selectedItem.title}
                 </div>
 
