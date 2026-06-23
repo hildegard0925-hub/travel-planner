@@ -549,8 +549,15 @@ function ScheduleRow({
                   onClick={(e) => {
                     e.stopPropagation()
                     const params = window.location.search
+                    const currentShareCode =
+                      location.pathname.split('/')[2]
+
+                    const mapPath = location.pathname.startsWith('/share/')
+                      ? `/share/${currentShareCode}/map`
+                      : `/trip/${trip.id}/map`
+
                     navigate(
-                      `/trip/${trip.id}/map?day=${item.day_index}&lat=${item.lat}&lng=${item.lng}${params}`
+                      `${mapPath}?day=${item.day_index}&lat=${item.lat}&lng=${item.lng}${params}`
                     )
                   }}
                 >
