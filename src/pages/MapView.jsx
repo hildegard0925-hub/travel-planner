@@ -389,7 +389,34 @@ export default function MapView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 
-                <div style={{ fontWeight: 500 }}>
+                <div
+                  onClick={() => {
+
+                    const origin =
+                      position
+                        ? `${position.lat},${position.lng}`
+                        : ''
+
+                    const destination =
+                      selectedItem.lat && selectedItem.lng
+                        ? `${selectedItem.lat},${selectedItem.lng}`
+                        : encodeURIComponent(
+                            selectedItem.address ||
+                            selectedItem.title
+                          )
+
+                    window.open(
+                      `https://maps.google.com/maps?saddr=${origin}&daddr=${destination}&dirflg=w`,
+                      '_blank'
+                    )
+
+                  }}
+                  style={{
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
                   {selectedItem.indices
                     ? selectedItem.indices.join(', ') + '번 '
                     : (photoMarkers.findIndex(r => r.id === selectedItem.id) + 1) + '번 '}
