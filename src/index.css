@@ -113,7 +113,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 
   color: #b98f99;
 
-  text-shadow: 2px 2px 0 #ead3d8;
+  text-shadow: 1.7px 1.7px 0 #ead3d8;
 
   flex: 1;
 }
