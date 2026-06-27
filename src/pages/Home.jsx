@@ -93,7 +93,7 @@ export default function Home() {
   return (
     <div>
       <div className="top-header">
-        <h1>Jelly Travel</h1>
+        <h1>JellyTravel</h1>
 
         <div style={{
           display:'flex',

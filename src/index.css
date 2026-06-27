@@ -109,11 +109,11 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .top-header h1 {
   font-family: var(--font-display);
   font-size: 30px;
-  font-weight: 400;
+  font-weight: 700;
 
   color: #b98f99;
 
-  text-shadow: 3px 3px 0 #ead3d8;
+  text-shadow: 1.5px 1.5px 0 #ead3d8;
 
   flex: 1;
 }
