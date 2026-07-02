@@ -1,5 +1,4 @@
 import JSZip from 'jszip'
-import { loadData, saveData } from './storage.js'
 
 const DB_NAME = 'jellytravel_photos'
 const STORE_NAME = 'photos'
@@ -54,14 +53,6 @@ export async function exportBackup() {
 
   const zip = new JSZip()
 
-  // 데이터
-  const data = loadData()
-
-  zip.file(
-    'data.json',
-    JSON.stringify(data, null, 2)
-  )
-
   // 사진
   const photos = await getAllPhotos()
 
@@ -91,7 +82,7 @@ export async function exportBackup() {
 
   a.href = url
   a.download =
-    `jellytravel_backup_${today}.zip`
+    `jellytravel_photos_${today}.zip`
 
   a.click()
 
@@ -102,29 +93,8 @@ export async function importBackup(file) {
 
   try {
 
-    // 구버전 JSON 백업
-    if (file.name.endsWith('.json')) {
-
-      const text = await file.text()
-
-      const data = JSON.parse(text)
-
-      saveData(data)
-
-      return true
-    }
-
     // ZIP 백업
     const zip = await JSZip.loadAsync(file)
-
-    // data.json
-    const dataText =
-      await zip.file('data.json')
-        .async('string')
-
-    const data = JSON.parse(dataText)
-
-    saveData(data)
 
     // photos
     const photoFiles =

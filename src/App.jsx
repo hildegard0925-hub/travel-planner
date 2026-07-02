@@ -8,8 +8,41 @@ import Checklist from './pages/Checklist.jsx'
 import Records from './pages/Records.jsx'
 import ShareTrip from './pages/ShareTrip.jsx'
 import ShareLayout from './pages/ShareLayout.jsx'
+import { useEffect } from 'react'
+
+import {
+  checkAndPull
+} from './services/syncService.js'
+
+import {
+  saveData,
+  getLocalUpdatedAt
+} from './services/storage.js'
 
 export default function App() {
+    useEffect(() => {
+
+      async function initCloud() {
+
+        try {
+
+          const cloudData = await checkAndPull(
+            getLocalUpdatedAt()
+          )
+
+          if (cloudData) {
+            saveData(cloudData, false)
+          }
+
+        } catch (err) {
+          console.error('Cloud 동기화 실패:', err)
+        }
+
+      }
+
+      initCloud()
+
+    }, [])
   return (
     <Routes>
       <Route element={<Layout />}>
