@@ -1,9 +1,11 @@
 const API_URL =
   'https://jellytravel-share.the-jelly-atelier.workers.dev'
 
-const SYNC_KEY = import.meta.env.VITE_SYNC_KEY
+const SYNC_KEY = import.meta.env.VITE_SYNC_KEY || 'TEST_KEY'
 
+console.log(import.meta.env)
 console.log('SYNC_KEY =', SYNC_KEY)
+
 const LAST_SYNCED_KEY = 'jellytravel_last_synced_at'
 
 const DEBOUNCE_MS = 800
@@ -23,7 +25,6 @@ function setLastSyncedAt(iso) {
 // --- Cloud 통신 ---
 
 export async function pushToCloud(data) {
-  console.log('SYNC_KEY in pushToCloud =', SYNC_KEY)
 
   const updatedAt = new Date().toISOString()
 
