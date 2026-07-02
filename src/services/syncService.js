@@ -2,6 +2,8 @@ const API_URL =
   'https://jellytravel-share.the-jelly-atelier.workers.dev'
 
 const SYNC_KEY = import.meta.env.VITE_SYNC_KEY
+
+console.log('SYNC_KEY =', SYNC_KEY)
 const LAST_SYNCED_KEY = 'jellytravel_last_synced_at'
 
 const DEBOUNCE_MS = 800
