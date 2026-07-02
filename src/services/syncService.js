@@ -23,6 +23,7 @@ function setLastSyncedAt(iso) {
 // --- Cloud 통신 ---
 
 export async function pushToCloud(data) {
+  console.log('SYNC_KEY in pushToCloud =', SYNC_KEY)
 
   const updatedAt = new Date().toISOString()
 
