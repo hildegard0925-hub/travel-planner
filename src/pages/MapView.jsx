@@ -73,22 +73,15 @@ export default function MapView() {
   useEffect(() => {
 
     async function loadPhotoMarkers() {
-
-      const source = (
-        selectedDay === null
+      
+      const source =
+        (selectedDay === null
           ? records
-          : records.filter(
-              r => r.day_index === selectedDay
-            )
-      )
-      .filter(
-        r =>
-          (r.photo_id || r.photo_url) &&
-          r.lat != null &&
-          r.lng != null &&
-          !isNaN(Number(r.lat)) &&
-          !isNaN(Number(r.lng))
-      )
+          : records.filter(r => r.day_index === selectedDay))
+        .map((record, index) => ({
+          ...record,
+          recordIndex: index + 1,
+        }))
 
       const newMarkers =
         await Promise.all(
@@ -109,7 +102,6 @@ export default function MapView() {
           }))
 
         )
-
       setPhotoMarkers(newMarkers)
 
     }
@@ -421,6 +413,7 @@ export default function MapView() {
                     selectedItem.indices
                       ? selectedItem.indices.join(', ') + '번 '
                       : (
+                          selectedItem.recordIndex ??
                           schedules.findIndex(
                             s => s.id === selectedItem.id
                           ) + 1

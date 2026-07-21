@@ -144,8 +144,8 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     set('actual_datetime', null)
     setExifGps(null)
     setGpsConfirmed(false)
-    set('lat', null)
-    set('lng', null)
+
+    // 기존 장소 좌표는 유지
 
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
@@ -385,7 +385,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 {exifGps && gpsConfirmed && (
                   <div style={{ fontSize: 12, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     📍 위치 등록됨
-                    <button onClick={() => { setExifGps(null); set('lat', null); set('lng', null); setGpsConfirmed(false) }}
+                    <button onClick={() => { setExifGps(null); setGpsConfirmed(false) }}
                       style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
                       취소
                     </button>
