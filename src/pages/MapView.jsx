@@ -413,9 +413,8 @@ export default function MapView() {
                     selectedItem.indices
                       ? selectedItem.indices.join(', ') + '번 '
                       : (
-                          selectedItem.recordIndex ??
-                          schedules.findIndex(
-                            s => s.id === selectedItem.id
+                          photoMarkers.findIndex(
+                            r => r.id === selectedItem.id
                           ) + 1
                         ) + '번 '
                   }
