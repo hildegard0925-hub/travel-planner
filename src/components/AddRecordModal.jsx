@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale'
 import { readPhotoDate, readPhotoGps } from '../utils/exif.js'
 import { compressImage } from '../utils/imageUtils'
 import { savePhoto } from '../services/photoStorage.js'
+import PlaceSearch from './PlaceSearch'
 
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
@@ -33,6 +34,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
     end_time: initial?.end_time?.slice(0, 5) ?? '',
     description: initial?.description ?? '',
     address: initial?.address ?? '',
+    place_id: initial?.place_id ?? '',
     cost_local: initial?.cost_local ?? '',
     cost_krw: initial?.cost_krw ?? '',
     payment_method: initial?.payment_method ?? 'card',
@@ -265,11 +267,17 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          {/* 제목 */}
-          <div className="form-group">
-            <label className="form-label">제목 *</label>
-            <input className="form-input" value={form.title} onChange={e => set('title', e.target.value)} />
-          </div>
+          <PlaceSearch
+            value={form.title}
+            onChange={(v) => set('title', v)}
+            onSelect={(p) => {
+              set('title', p.name)
+              set('address', p.address)
+              set('place_id', p.place_id)
+              set('lat', p.lat)
+              set('lng', p.lng)
+            }}
+          />
 
           {/* 일차 */}
           <div className="form-group">
@@ -385,7 +393,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 )}
 
                 {/* GPS 없을 때 장소 검색 폴백 */}
-                {!exifGps && gpsUnavailable && (
+                {!exifGps && gpsUnavailable && !form.place_id && (
                   <div style={{ background: 'var(--bg1, #ffffff)', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
                     <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>
                       📍 위치를 장소로 검색해서 등록할 수 있어요

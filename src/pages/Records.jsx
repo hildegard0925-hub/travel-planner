@@ -462,17 +462,25 @@ function RecordCard({
               </div>
             )}
 
-            {/* 둘째 줄: 주소 (바로 아래, 여백 없이) */}
-            {record.address && (
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1, paddingLeft: 18 }}>
-                {record.address}
-              </div>
-            )}
-
             {/* 내용 */}
             {record.description && (
               <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, lineHeight: 1.4 }}>
                 {record.description}
+              </p>
+            )}
+
+            {record.memo && (
+              <p
+                style={{
+                  fontSize: 13,
+                  marginTop: 4,
+                  color: 'var(--text2)',
+                  lineHeight: 1.45,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}
+              >
+                💬 {linkify(record.memo)}
               </p>
             )}
           </div>
@@ -492,8 +500,17 @@ function RecordCard({
         {/* 펼쳐진 상태 */}
         {expanded && (
           <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-            {record.memo && (
-              <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>{record.memo}</p>
+            {record.address && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: 'var(--accent)',
+                  marginBottom: 8,
+                  wordBreak: 'break-word'
+                }}
+              >
+                📍 {record.address}
+              </p>
             )}
             {record.actual_datetime && (
               <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }} data-role="time-area">

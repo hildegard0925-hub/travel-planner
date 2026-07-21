@@ -39,7 +39,12 @@ export default function TripDetail() {
   } = useTrips()
   const { byDay, loading: schLoading, addSchedule, updateSchedule, deleteSchedule, toggleDone } = useSchedules(tripId)
   const { copyFromSchedule } = useRecords(tripId)
-  const [selectedDay, setSelectedDay] = useState(0)
+  const storageKey = `trip-selected-day-${tripId}`
+
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const saved = localStorage.getItem(storageKey)
+    return saved ? Number(saved) : 0
+  })
   const [viewMode, setViewMode] = useState('timeline')
   const [showAdd, setShowAdd] = useState(false)
   const [editItem, setEditItem] = useState(null)
@@ -75,6 +80,9 @@ export default function TripDetail() {
       }
     })
   }, [selectedDay])
+  useEffect(() => {
+    localStorage.setItem(storageKey, selectedDay)
+  }, [storageKey, selectedDay])
 
   if (tripLoading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>로딩 중...</div>
   if (!trip) return null
@@ -497,33 +505,29 @@ function ScheduleRow({
                   fontSize: 13,
                   marginTop: 4,
                   color: 'var(--text2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  flexWrap: 'wrap'
+                  lineHeight: 1.45,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
                 }}
               >
-                {item.transport && (
-                  <span style={{ flexShrink: 0 }}>
-                    {METHOD_ICON[item.transport] ?? '🚌'}
-                  </span>
-                )}
+                {item.transport && `${METHOD_ICON[item.transport] ?? '🚌'} `}
+                {item.transport_minutes != null && `${item.transport_minutes}분 | `}
+                {item.description}
+              </p>
+            )}
 
-                {item.transport_minutes != null && (
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--text3)',
-                      flexShrink: 0
-                    }}
-                  >
-                    {item.transport_minutes}분 | 
-                  </span>
-                )}
-
-                <span>
-                  {item.description}
-                </span>
+            {item.memo && (
+              <p
+                style={{
+                  fontSize: 13,
+                  marginTop: 4,
+                  color: 'var(--text2)',
+                  lineHeight: 1.45,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}
+              >
+                💬 {linkify(item.memo)}
               </p>
             )}
             
@@ -568,7 +572,6 @@ function ScheduleRow({
               {item.payment_method && <span className="badge" style={{ background: 'color-mix(in srgb, var(--accent2) 25%, white)', color: 'var(--text)' }}> 결제 / {PAYMENT_LABEL[item.payment_method]}</span>}
               <span className="badge" style={{ background: 'color-mix(in srgb, var(--accent2) 25%, white)', color: 'var(--text)' }}>{CAT_LABEL[item.category] ?? item.category}</span>
             </div>
-            {item.memo && <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>{linkify(item.memo)}</p>}
             <div style={{ display: 'flex', gap: 8 }}>
 
               {!isShareMode && (
