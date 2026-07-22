@@ -3,11 +3,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Map, AdvancedMarker, Polyline, useMap } from '@vis.gl/react-google-maps'
 import { useTrip } from '../hooks/useTrips.js'
 import { useSchedules } from '../hooks/useSchedules.js'
-import { useRecords } from '../hooks/useRecords.js'
 import { useGeolocation } from '../hooks/useGeolocation.js'
 import { addDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { getPhotoUrl } from '../services/photoStorage.js'
 
 const CAT_COLOR = {
   food: '#d4622a', transport: '#2a6dd4', shopping: '#9b2ad4',
@@ -22,20 +20,11 @@ export default function MapView() {
   const navigate = useNavigate()
   const { trip } = useTrip(tripId)
   const { schedules, byDay } = useSchedules(tripId)
-  const { records } = useRecords(tripId)
-  const [selectedDay, setSelectedDay] = useState(0) // 기본: 1일차
-
-  const photoRecords = (selectedDay === null
-    ? records
-    : records.filter(r => r.day_index === selectedDay)
-  ).filter(r =>
-    (r.photo_id || r.photo_url) &&
-    r.lat != null &&
-    r.lng != null &&
-    !isNaN(Number(r.lat)) &&
-    !isNaN(Number(r.lng))
-  )
-  const [photoMarkers, setPhotoMarkers] = useState([])
+  const storageKey = `trip-map-selected-day-${tripId}`
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const saved = localStorage.getItem(storageKey)
+    return saved !== null ? Number(saved) : 0
+  }) // 기본: 1일차
   const {
     position,
     heading,
@@ -57,6 +46,9 @@ export default function MapView() {
     }
   }, [focusDay])
   useEffect(() => {
+    localStorage.setItem(storageKey, selectedDay)
+  }, [storageKey, selectedDay])
+  useEffect(() => {
     if (focusLat && focusLng) {
       const found = schedules.find(
         s =>
@@ -70,48 +62,7 @@ export default function MapView() {
     }
   }, [focusLat, focusLng, schedules])
 
-  useEffect(() => {
-
-    async function loadPhotoMarkers() {
-      
-      const source =
-        (selectedDay === null
-          ? records
-          : records.filter(r => r.day_index === selectedDay))
-        .map((record, index) => ({
-          ...record,
-          recordIndex: index + 1,
-        }))
-
-      const newMarkers =
-        await Promise.all(
-
-          source.map(async record => ({
-
-            ...record,
-
-            photoUrl:
-              record.photo_url
-                ? record.photo_url
-                : (
-                    record.photo_id
-                      ? await getPhotoUrl(record.photo_id)
-                      : null
-                  )
-
-          }))
-
-        )
-      setPhotoMarkers(newMarkers)
-
-    }
-
-    loadPhotoMarkers()
-
-  }, [records, selectedDay])
   const [selectedItem, setSelectedItem] = useState(null)
-  const [fullPhoto, setFullPhoto] = useState(null)
-  const [layer, setLayer] = useState('schedule') // 'schedule' | 'record' | 'all'
 
   if (!trip) return null
 
@@ -140,10 +91,8 @@ export default function MapView() {
     !isNaN(Number(focusLat)) &&
     !isNaN(Number(focusLng))
 
-  const allCoords = [
-    ...schedules.filter(s => s.lat && s.lng),
-    ...records.filter(r => r.lat && r.lng),
-  ]
+  const allCoords =
+    schedules.filter(s => s.lat && s.lng)
 
   const centerCoord =
     schedules.find(s => s.category === 'lodging' && s.lat && s.lng) // 숙소 우선
@@ -188,17 +137,6 @@ export default function MapView() {
           <button onClick={() => setSelectedDay(null)}
             style={pillStyle(selectedDay === null)}>
             전체
-          </button>
-        </div>
-
-        {/* 구분선 + 토글 고정 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', margin: '2px 4px 2px 0' }} />
-          <button
-            onClick={() => setLayer(l => l === 'schedule' ? 'record' : 'schedule')}
-            style={pillStyle(true)}
-          >
-            {layer === 'schedule' ? '일정' : '기록'}
           </button>
         </div>
       </div>
@@ -250,10 +188,16 @@ export default function MapView() {
             position={position}
             watching={watching}
           />
-          <CenterOnLoad coord={!isValidFocus ? centerCoord : null} />
+          <CenterOnLoad
+            coord={
+              !isValidFocus
+                ? displayItems[0]
+                : null
+            }
+          />
 
           {/* 일정 핀 */}
-          {(layer === 'all' || layer === 'schedule') && groupedItems.map((item) => {
+          {groupedItems.map((item) => {
             return (
               <AdvancedMarker key={item.id}
                 position={{ lat: Number(item.lat), lng: Number(item.lng) }}
@@ -279,99 +223,8 @@ export default function MapView() {
               </AdvancedMarker>
             )
           })}
-          
-          {/* 사진 핀 (기록) */}
-          {(layer === 'all' || layer === 'record') && photoMarkers.map((record, idx) => {
-            if (!record.photoUrl) return null
-            const pos = offsetPosition(photoMarkers, record, idx, 0.00035)
-
-            return (
-              <AdvancedMarker
-                key={`photo-${record.id}`}
-                position={pos}
-                zIndex={record.id === selectedItem?.id ? 999999 : Math.round((90 - Number(record.lat)) * 1000)}
-                onClick={() => setSelectedItem(record)}
-              >
-                <div
-                  onDoubleClick={(e) => {
-                    e.stopPropagation()
-                    setFullPhoto(
-                      record.photoUrl || record.photo_url
-                    )
-                  }}
-                  onClick={(e) => {
-
-                    setSelectedItem(record)
-
-                    if (
-                      record.photoUrl ||
-                      record.photo_url
-                    ) {
-
-                      const now = Date.now()
-
-                      if (
-                        record._lastTap &&
-                        now - record._lastTap < 300
-                      ) {
-
-                        setFullPhoto(
-                          record.photoUrl || record.photo_url
-                        )
-
-                      }
-
-                      record._lastTap = now
-
-                    }
-
-                  }}
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: '50%',
-                    border: '3px solid white',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 8px rgba(0,0,0,.35)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <img
-                    src={record.photoUrl || record.photoUrl}
-                    alt={record.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                </div>
-              </AdvancedMarker>
-            )
-          })}
-
         </Map>
 
-        {/* 사진 풀스크린 */}
-        {fullPhoto && (
-          <div
-            onClick={() => setFullPhoto(null)}
-            style={{
-              position: 'absolute', inset: 0, zIndex: 50,
-              background: 'rgba(0,0,0,.85)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <img src={fullPhoto} alt="사진"
-              style={{ maxWidth: '95%', maxHeight: '90%', borderRadius: 12, objectFit: 'contain' }} />
-            <button onClick={() => setFullPhoto(null)}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                background: 'rgba(255,255,255,.2)', border: 'none', color: '#fff',
-                fontSize: 24, width: 40, height: 40, borderRadius: '50%', cursor: 'pointer',
-              }}>×</button>
-          </div>
-        )}
         {/* 선택된 장소 카드 */}
         {selectedItem && (
           <div className="card" style={{
@@ -409,15 +262,7 @@ export default function MapView() {
                     textDecoration: 'underline'
                   }}
                 >
-                  {
-                    selectedItem.indices
-                      ? selectedItem.indices.join(', ') + '번 '
-                      : (
-                          photoMarkers.findIndex(
-                            r => r.id === selectedItem.id
-                          ) + 1
-                        ) + '번 '
-                  }
+                  {selectedItem.indices.join(', ')}번
                   {selectedItem.title}
                 </div>
 
@@ -462,30 +307,7 @@ export default function MapView() {
     </div>
   )
 }
-function offsetPosition(items, item, index, offsetValue = 0.00015) {
-  const offset = offsetValue
 
-  // 같은 좌표를 가진 항목들 찾기
-  const sameLocationItems = items.filter(
-    i => i.lat === item.lat && i.lng === item.lng
-  )
-
-  // 하나뿐이면 이동 없음
-  if (sameLocationItems.length <= 1) {
-    return {
-      lat: item.lat,
-      lng: item.lng,
-    }
-  }
-
-  // 같은 위치 내에서 몇 번째인지 계산
-  const sameIndex = sameLocationItems.findIndex(i => i.id === item.id)
-
-  return {
-    lat: Number(item.lat) + offset * sameIndex,
-    lng: Number(item.lng) + offset * sameIndex,
-  }
-}
 function MoveToMyLocation({ position, watching }) {
   const map = useMap()
 
@@ -498,13 +320,14 @@ function MoveToMyLocation({ position, watching }) {
 
 function CenterOnLoad({ coord }) {
   const map = useMap()
-  const didCenter = useRef(false)
 
   useEffect(() => {
-    if (map && coord && !didCenter.current) {
-      map.panTo({ lat: Number(coord.lat), lng: Number(coord.lng) })
-      didCenter.current = true
-    }
+    if (!map || !coord) return
+
+    map.panTo({
+      lat: Number(coord.lat),
+      lng: Number(coord.lng),
+    })
   }, [map, coord])
 
   return null
