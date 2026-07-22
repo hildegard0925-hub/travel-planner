@@ -11,7 +11,7 @@ import { linkify } from '../utils/linkify'
 import { useLocation } from 'react-router-dom'
 import { getPhoto, deletePhoto } from '../services/photoStorage.js'
 
-const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🚩', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '⭐' }
 
 export default function Records() {
   const { tripId } = useParams()
@@ -346,7 +346,7 @@ function RecordCard({
   const [viewerUrl, setViewerUrl] = useState(null)
   const [expanded, setExpanded] = useState(false)
   const [showTimeMenu, setShowTimeMenu] = useState(false)
-  const emoji = CAT_EMOJI[record.category] ?? '📌'
+  const emoji = CAT_EMOJI[record.category] ?? '⭐'
   const costKrw = record.cost_krw > 0 ? `${record.cost_krw.toLocaleString()}원` : null
   const costLocal = record.cost_local > 0 ? `${record.cost_local.toLocaleString()} ${trip.currency}` : null
   const displayTime =

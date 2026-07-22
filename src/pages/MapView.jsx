@@ -48,25 +48,15 @@ export default function MapView() {
   useEffect(() => {
     localStorage.setItem(storageKey, selectedDay)
   }, [storageKey, selectedDay])
-  useEffect(() => {
-    if (focusLat && focusLng) {
-      const found = groupedItems.find(
-        s =>
-          String(s.lat) === String(focusLat) &&
-          String(s.lng) === String(focusLng)
-      )
-
-      if (found) {
-        setSelectedItem(found)
-      }
-    }
-  }, [focusLat, focusLng, groupedItems])
-
+  
   const [selectedItem, setSelectedItem] = useState(null)
 
-  if (!trip) return null
-
-  const totalDays = Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
+  // trip은 useTrip에서 비동기로 로딩되어 첫 렌더에는 null일 수 있다.
+  // 이 계산들과 그 아래 useEffect는 "trip이 없으면 return null" 분기보다
+  // 반드시 위에 있어야 한다 (그래야 훅 호출 개수가 렌더마다 항상 동일하다).
+  const totalDays = trip
+    ? Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
+    : 0
   const displayItems = (selectedDay === null ? schedules : (byDay[selectedDay] || []))
     .filter(s =>
       s.lat !== null &&
@@ -95,6 +85,22 @@ export default function MapView() {
       return acc
     }, {})
   )
+
+  useEffect(() => {
+    if (focusLat && focusLng) {
+      const found = groupedItems.find(
+        s =>
+          String(s.lat) === String(focusLat) &&
+          String(s.lng) === String(focusLng)
+      )
+
+      if (found) {
+        setSelectedItem(found)
+      }
+    }
+  }, [focusLat, focusLng, groupedItems])
+
+  if (!trip) return null
 
   const isValidFocus =
     focusLat !== null &&

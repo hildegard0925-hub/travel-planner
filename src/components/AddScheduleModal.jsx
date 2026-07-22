@@ -3,11 +3,11 @@ import PlaceSearch from './PlaceSearch'
 
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
-  { value: 'transport', label: '🛣️ 이동' },
+  { value: 'transport', label: '🚩 이동' },
   { value: 'shopping', label: '🛍️ 쇼핑' },
   { value: 'activity', label: '🧭 관광' },
   { value: 'lodging', label: '💒 숙소' },
-  { value: 'etc', label: '📌 기타' },
+  { value: 'etc', label: '⭐ 기타' },
 ]
 const TRANSPORTS = ['도보', '지하철', '버스', '택시', '비행기', '자차']
 

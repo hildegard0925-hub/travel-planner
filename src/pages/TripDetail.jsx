@@ -14,7 +14,7 @@ import {
   APP_URL
 } from '../services/shareService'
 
-const CAT_EMOJI = { food: '🍜', transport: '🛣️', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '📌' }
+const CAT_EMOJI = { food: '🍜', transport: '🚩', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '⭐' }
 const CAT_LABEL = { food: '식사', transport: '이동', shopping: '쇼핑', activity: '액티비티', lodging: '숙소', etc: '기타' }
 const METHOD_ICON = {
   도보: '🚶',
@@ -506,7 +506,7 @@ function ScheduleRow({
   isShareMode
 }) {
   const [expanded, setExpanded] = useState(false)
-  const emoji = CAT_EMOJI[item.category] ?? '📌'
+  const emoji = CAT_EMOJI[item.category] ?? '⭐'
   const costLocal = item.cost_local > 0 ? `${item.cost_local.toLocaleString()} ${trip.currency}` : null
   const costKrw = item.cost_krw > 0 ? `${item.cost_krw.toLocaleString()}원` : null
 
