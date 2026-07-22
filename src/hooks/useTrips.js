@@ -36,6 +36,7 @@ export function useTrips() {
     const newTrip = {
       id: crypto.randomUUID(),
       share_code: '',
+      font_family: 'MJ Whale Sans',
       ...values
     }
 

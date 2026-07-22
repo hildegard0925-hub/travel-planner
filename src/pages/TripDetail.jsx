@@ -26,6 +26,19 @@ const METHOD_ICON = {
 }
 const PAYMENT_LABEL = { card: '카드', cash: '현금' }
 
+const FONT_LIST = [
+  'MJ Whale Sans',
+  'Mint Strawberrycake',
+  'MJ Cherry Blossoms',
+  'MJ First Snow Note',
+  'MJ Magic Shop Vibe',
+  'MJ Nocturne',
+  'MJ Our Summer',
+  'MJ That Winter',
+  'MJ That Winter Light',
+  'MJ Vermeer'
+]
+
 export default function TripDetail() {
   const { tripId } = useParams()
   const navigate = useNavigate()
@@ -52,6 +65,7 @@ export default function TripDetail() {
   const [showMenu, setShowMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditTrip, setShowEditTrip] = useState(false)
+  const [showFontModal, setShowFontModal] = useState(false)
   const [shareCode, setShareCode] = useState('')
 
   const params = new URLSearchParams(location.search)
@@ -63,6 +77,13 @@ export default function TripDetail() {
       trip?.share_code || ''
     )
 
+  }, [trip])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--trip-font',
+      trip?.font_family || 'MJ Whale Sans'
+    )
   }, [trip])
 
   useEffect(() => {
@@ -301,7 +322,18 @@ export default function TripDetail() {
                 setShowEditTrip(true)
               }}
             >
-              환율 수정
+              💵 환율 수정
+            </button>
+
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%', marginBottom: 12 }}
+              onClick={() => {
+                setShowMenu(false)
+                setShowFontModal(true)
+              }}
+            >
+              🎨 여행 글꼴
             </button>
 
             <button
@@ -386,7 +418,7 @@ export default function TripDetail() {
                 else alert('삭제 중 오류가 발생했습니다.')
               }}
             >
-              여행 삭제
+              🗑️ 여행 삭제
             </button>
 
           </div>
@@ -402,6 +434,14 @@ export default function TripDetail() {
           await updateTrip(tripId, values)
 
         }}
+      />
+    )}
+    {showFontModal && (
+      <FontModal
+        trip={trip}
+        updateTrip={updateTrip}
+        tripId={tripId}
+        onClose={() => setShowFontModal(false)}
       />
     )}
     {showDeleteConfirm && (
@@ -495,7 +535,20 @@ function ScheduleRow({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-              {item.start_time && <span style={{ fontSize: 12, color: 'var(--text3)', fontVariantNumeric: 'tabular-nums' }}>{item.start_time?.slice(0, 5)}</span>}
+              {item.start_time && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text3)',
+                    fontVariantNumeric: 'tabular-nums'
+                  }}
+                >
+                  {item.start_time.slice(0, 5)}
+                  {expanded && item.end_time
+                    ? `~${item.end_time.slice(0, 5)}`
+                    : ''}
+                </span>
+              )}
               <span style={{ fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>{item.title}</span>
               {item.is_done && <span style={{ fontSize: 10, color: 'var(--success)', background: '#e8f5e9', padding: '1px 6px', borderRadius: 999 }}>완료</span>}
             </div>
@@ -540,6 +593,7 @@ function ScheduleRow({
 
         {expanded && (
           <div style={{ marginTop: 6, borderTop: '1px solid var(--border)', paddingTop: 6 }}>
+
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
                {item.address && (
                 <p
@@ -693,6 +747,73 @@ function EditTripModal({ trip, onClose, onSave }) {
           </button>
 
         </div>
+
+      </div>
+    </div>
+  )
+}
+function FontModal({
+  trip,
+  updateTrip,
+  tripId,
+  onClose
+}) {
+  const fonts = [
+    'MJ Whale Sans',
+    'Mint Strawberrycake',
+    'MJ Cherry Blossoms',
+    'MJ First Snow Note',
+    'MJ Magic Shop Vibe',
+    'MJ Nocturne',
+    'MJ Our Summer',
+    'MJ That Winter',
+    'MJ That Winter Light',
+    'MJ Vermeer'
+  ]
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="modal-sheet"
+        onClick={e => e.stopPropagation()}
+      >
+
+        <h2 style={{ marginBottom: 16 }}>
+          여행 글꼴
+        </h2>
+
+        {fonts.map(font => (
+          <button
+            key={font}
+            className="btn btn-secondary"
+            style={{
+              width: '100%',
+              marginBottom: 8,
+              fontFamily: font,
+              justifyContent: 'flex-start'
+            }}
+            onClick={async () => {
+
+              await updateTrip(tripId, {
+                font_family: font
+              })
+
+              document.documentElement.style.setProperty(
+                '--trip-font',
+                font
+              )
+
+              onClose()
+
+            }}
+          >
+            {font}
+            {trip.font_family === font ? ' ✓' : ''}
+          </button>
+        ))}
 
       </div>
     </div>

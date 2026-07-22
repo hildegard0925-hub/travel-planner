@@ -360,30 +360,27 @@ function RecordCard({
   const scheduleTime = record.schedule_time
     ? record.schedule_time.slice(0, 5)
     : null
+  const recordTime = record.start_time
+    ? record.start_time.slice(0, 5)
+    : scheduleTime
   const photoTime = record.actual_datetime
     ? format(new Date(record.actual_datetime), 'HH:mm', { locale: ko })
     : null
 
   const handleSelectTime = async (source) => {
     setShowTimeMenu(false)
+
     try {
-      if (source === 'schedule') {
-        const t = record.schedule_time
-
-        await onUpdate(record.id, {
-          start_time: t,
-          time_source: 'schedule'
-        })
-      } else {
-        const t = new Date(record.actual_datetime)
-          .toTimeString()
-          .slice(0, 5)
-
-        await onUpdate(record.id, {
-          start_time: t,
-          time_source: 'photo'
-        })
-      }
+      await onUpdate(record.id, {
+        time_source:
+          source === 'photo'
+            ? 'photo'
+            : (
+                record.start_time !== record.schedule_time?.slice(0, 5)
+                  ? 'record'
+                  : 'schedule'
+              )
+      })
     } catch (err) {
       console.error(err)
       alert('시간 변경 중 오류 발생')
@@ -557,9 +554,20 @@ function RecordCard({
                         fontWeight: record.time_source !== 'photo' ? 600 : 400,
                       }}
                     >
-                      <span>📅</span>
-                      <span>일정 시간{scheduleTime ? ` (${scheduleTime})` : ''}</span>
-                      {record.time_source !== 'photo' && <span style={{ marginLeft: 'auto' }}>✓</span>}
+                      <span>
+                        {record.start_time !== record.schedule_time?.slice(0, 5)
+                          ? '✏️'
+                          : '📅'}
+                      </span>
+                      <span>
+                        {record.start_time !== record.schedule_time?.slice(0, 5)
+                          ? '기록 시간'
+                          : '일정 시간'}
+                        {recordTime ? ` (${recordTime})` : ''}
+                      </span>
+                      {record.time_source !== 'photo' && (
+                        <span style={{ marginLeft: 'auto' }}>✓</span>
+                      )}
                     </button>
                     <button
                       onClick={() => handleSelectTime('photo')}

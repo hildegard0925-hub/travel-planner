@@ -159,8 +159,6 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
     setExifDate(date)
     set('actual_datetime', date.toISOString())
-    set('start_time', format(date, 'HH:mm'))
-    set('time_source', 'photo')
 
     // day_index 자동 계산
     const tripStart = new Date(trip.start_date)
@@ -213,16 +211,27 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
 
         photoId = await savePhoto(fileToSave)
       }
-
       const result = await onSave({
         ...form,
+
+        time_source:
+          initial?.time_source ??
+          (
+            initial?.schedule_id
+              ? (
+                  form.start_time !== initial?.schedule_time?.slice(0, 5)
+                    ? 'record'
+                    : 'schedule'
+                )
+              : 'record'
+          ),
+
         photo_id: photoId,
 
-        start_time: exifDate
-          ? format(exifDate, 'HH:mm')
-          : (form.start_time === '' || form.start_time == null
+        start_time:
+          form.start_time === '' || form.start_time == null
             ? initial?.start_time
-            : form.start_time),
+            : form.start_time,
 
         end_time:
           form.end_time === '' || form.end_time == null

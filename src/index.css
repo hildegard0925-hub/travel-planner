@@ -1,10 +1,54 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 @font-face {
-  font-family: 'MJ Whale Sans';
+  font-family: 'Mj Whale Sans';
   src: url('/fonts/MjWhaleSans_K.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
+}
+@font-face {
+  font-family: 'Mint Strawberrycake';
+  src: url('/fonts/MintStrawberrycake_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj Cherry Blossoms';
+  src: url('/fonts/MjCherryBlossoms_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj First Snow Note';
+  src: url('/fonts/MjFirstSnowNote_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj Magic Shop Vibe';
+  src: url('/fonts/MjMagicShopVibe_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj Nocturne';
+  src: url('/fonts/MjNocturne_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj Our Summer';
+  src: url('/fonts/MjOurSummer_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj That Winter';
+  src: url('/fonts/MjThatWinter.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj That Winter Light';
+  src: url('/fonts/MjThatWinterLight_K.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Mj Vermeer';
+  src: url('/fonts/MjVermeer_K.ttf') format('truetype');
 }
 
 :root {
@@ -29,9 +73,11 @@
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
-  --font-body: 'MJ Whale Sans', sans-serif;
-  --font-display: 'MJ Whale Sans', sans-serif;
-}
+  --trip-font: 'MJ Whale Sans';
+
+  --font-body: var(--trip-font), sans-serif;
+  --font-display: var(--trip-font), sans-serif;
+  }
 
 html, body, #root {
   height: 100%;
