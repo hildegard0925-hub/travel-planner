@@ -82,8 +82,16 @@ export default function MapView() {
   const groupedItems = Object.values(
     displayItems.reduce((acc, item, idx) => {
       const key = item.place_id || `${item.lat},${item.lng}`
-      if (!acc[key]) acc[key] = { ...item, indices: [] }
+      if (!acc[key]) {
+        acc[key] = { ...item, indices: [] }
+      }
+
       acc[key].indices.push(idx + 1)
+
+      // 같은 장소에 숙소가 하나라도 있으면 대표 카테고리를 숙소로 변경
+      if (item.category === 'lodging') {
+        acc[key].category = 'lodging'
+      }
       return acc
     }, {})
   )
