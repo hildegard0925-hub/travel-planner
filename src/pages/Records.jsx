@@ -440,7 +440,13 @@ function RecordCard({
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'nowrap' }}>
               <span style={{ fontSize: 13, flexShrink: 0 }}>{emoji}</span>
               {displayTime && (
-                <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: 'var(--text2)',
+                  fontVariantNumeric: 'tabular-nums',
+                  flexShrink: 0
+                }}>
                   {displayTime}
                 </span>
               )}
@@ -461,7 +467,7 @@ function RecordCard({
 
             {/* 내용 */}
             {record.description && (
-              <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, lineHeight: 1.4 }}>
+              <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, lineHeight: 1.45 }}>
                 {record.description}
               </p>
             )}

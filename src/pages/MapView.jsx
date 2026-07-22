@@ -50,7 +50,7 @@ export default function MapView() {
   }, [storageKey, selectedDay])
   useEffect(() => {
     if (focusLat && focusLng) {
-      const found = schedules.find(
+      const found = groupedItems.find(
         s =>
           String(s.lat) === String(focusLat) &&
           String(s.lng) === String(focusLng)
@@ -60,7 +60,7 @@ export default function MapView() {
         setSelectedItem(found)
       }
     }
-  }, [focusLat, focusLng, schedules])
+  }, [focusLat, focusLng, groupedItems])
 
   const [selectedItem, setSelectedItem] = useState(null)
 

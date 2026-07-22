@@ -511,36 +511,51 @@ function ScheduleRow({
   const costKrw = item.cost_krw > 0 ? `${item.cost_krw.toLocaleString()}원` : null
 
   return (
-    <div style={{ display: 'flex', gap: 8, marginBottom: isLast ? 0 : 4 }}>
-      {/* 타임라인 선 */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 26, flexShrink: 0 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: item.is_done ? 'var(--success)' : `color-mix(in srgb, var(--accent) 15%, transparent)`,
-          border: `2px solid ${item.is_done ? 'var(--success)' : 'var(--accent)'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, flexShrink: 0, transition: 'all .2s',
-        }}>
-          {item.is_done ? '✓' : emoji}
-        </div>
-        {!isLast && <div style={{ flex: 1, width: 2, background: 'var(--border)', minHeight: 20 }} />}
-      </div>
+    <div style={{ marginBottom: isLast ? 0 : 8 }}>
 
       {/* 카드 */}
       <div className="card" style={{
-        flex: 1, padding: '5px 12px', marginBottom: 5,
-        opacity: item.is_done ? 0.6 : 1, cursor: 'pointer',
-        transition: 'opacity .2s',
+        flex: 1,
+        padding: '5px 12px',
+        marginBottom: 5,
+        cursor: 'pointer',
+        transition: '.2s',
       }} onClick={() => setExpanded(e => !e)}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+              {item.is_done && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#9b8bcf',
+                    background: '#f5f2ff',
+                    padding: '2px 7px',
+                    borderRadius: 999,
+                  }}
+                >
+                  완료
+                </span>
+              )}
+
+              <span
+                style={{
+                  fontSize: 13,
+                  flexShrink: 0
+                }}
+              >
+                {emoji}
+              </span>
+
               {item.start_time && (
                 <span
                   style={{
-                    fontSize: 12,
-                    color: 'var(--text3)',
-                    fontVariantNumeric: 'tabular-nums'
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: 'var(--text2)',
+                    fontVariantNumeric: 'tabular-nums',
+                    flexShrink: 0
                   }}
                 >
                   {item.start_time.slice(0, 5)}
@@ -549,8 +564,17 @@ function ScheduleRow({
                     : ''}
                 </span>
               )}
-              <span style={{ fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>{item.title}</span>
-              {item.is_done && <span style={{ fontSize: 10, color: 'var(--success)', background: '#e8f5e9', padding: '1px 6px', borderRadius: 999 }}>완료</span>}
+
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  textDecoration: 'none'
+                }}
+              >
+                {item.title}
+              </span>
+
             </div>
             {(item.transport || item.transport_minutes || item.description) && (
               <p
