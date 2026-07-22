@@ -90,7 +90,9 @@ export default function TripTableView({
   const wrapLeftCell = {
     ...cellStyle,
     whiteSpace: 'normal',
-    textAlign: 'left'
+    textAlign: 'left',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word'
   }
 
   // 전체 일정 합치기 + 정렬
@@ -388,18 +390,11 @@ export default function TripTableView({
                       : ''}
                   </td>
 
-                  <td style={{ ...cellStyle, textAlign: 'left' }}>
+                  <td style={wrapLeftCell}>
                     {item.title}
                   </td>
 
-                  <td
-                    style={{
-                      ...cellStyle,
-                      whiteSpace: isMobile ? 'normal' : 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
+                  <td style={wrapLeftCell}>
                     {item.description}
                   </td>
 
@@ -419,7 +414,7 @@ export default function TripTableView({
                     {item.payment_method}
                   </td>
 
-                  <td style={{ ...cellStyle, textAlign: 'left' }}>
+                  <td style={wrapLeftCell}>
                     {linkify(item.memo)}
                   </td>
 
