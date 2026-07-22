@@ -74,6 +74,9 @@ export default function MapView() {
       !isNaN(Number(s.lat)) &&
       !isNaN(Number(s.lng))
     )
+  const centerItem =
+    displayItems.find(item => item.category === 'lodging')
+    ?? displayItems[0]
 
   // place_id 또는 lat/lng 기준으로 그룹화
   const groupedItems = Object.values(
@@ -191,7 +194,7 @@ export default function MapView() {
           <CenterOnLoad
             coord={
               !isValidFocus
-                ? displayItems[0]
+                ? centerItem
                 : null
             }
           />
