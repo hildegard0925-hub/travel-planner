@@ -279,7 +279,7 @@ export default function MapView() {
                     textDecoration: 'underline'
                   }}
                 >
-                  {selectedItem.indices.join(', ')}번
+                  {selectedItem.indices.join(', ')}번{' '}
                   {selectedItem.title}
                 </div>
 
