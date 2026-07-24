@@ -8,7 +8,7 @@ import PlaceSearch from './PlaceSearch'
 
 const CATEGORIES = [
   { value: 'food', label: '🍜 식사' },
-  { value: 'transport', label: '🚩 이동' },
+  { value: 'transport', label: '📍 이동' },
   { value: 'shopping', label: '🛍️ 쇼핑' },
   { value: 'activity', label: '🧭 관광' },
   { value: 'lodging', label: '💒 숙소' },
@@ -374,7 +374,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 {exifGps && !gpsConfirmed && (
                   <div style={{ background: 'var(--bg2)', borderRadius: 8, padding: '10px 12px' }}>
                     <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 6 }}>
-                      📍 사진 위치를 지도에 표시할까요?
+                      🚩 사진 위치를 지도에 표시할까요?
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
                       {exifGps.lat.toFixed(5)}, {exifGps.lng.toFixed(5)}
@@ -393,7 +393,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 )}
                 {exifGps && gpsConfirmed && (
                   <div style={{ fontSize: 12, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    📍 위치 등록됨
+                    🚩 위치 등록됨
                     <button onClick={() => { setExifGps(null); setGpsConfirmed(false) }}
                       style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
                       취소
@@ -405,7 +405,7 @@ export default function AddRecordModal({ trip, initial, onClose, onSave, onRefre
                 {!exifGps && gpsUnavailable && !form.place_id && (
                   <div style={{ background: 'var(--bg1, #ffffff)', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
                     <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>
-                      📍 위치를 장소로 검색해서 등록할 수 있어요
+                      🚩 위치를 장소로 검색해서 등록할 수 있어요
                     </div>
                     <input
                       className="form-input"

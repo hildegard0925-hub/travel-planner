@@ -11,7 +11,7 @@ import { linkify } from '../utils/linkify'
 import { useLocation } from 'react-router-dom'
 import { getPhoto, deletePhoto } from '../services/photoStorage.js'
 
-const CAT_EMOJI = { food: '🍜', transport: '🚩', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '⭐' }
+const CAT_EMOJI = { food: '🍜', transport: '📍', shopping: '🛍️', activity: '🧭', lodging: '💒', etc: '⭐' }
 
 export default function Records() {
   const { tripId } = useParams()
@@ -512,7 +512,7 @@ function RecordCard({
                   wordBreak: 'break-word'
                 }}
               >
-                📍 {record.address}
+                {record.address}
               </p>
             )}
             {record.actual_datetime && (
