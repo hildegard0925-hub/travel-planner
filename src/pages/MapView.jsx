@@ -134,7 +134,7 @@ export default function MapView() {
             color: watching ? '#fff' : 'var(--text2)',
             border: 'none', cursor: 'pointer',
           }}>
-          {watching ? '📍 추적 중' : '📍 내 위치'}
+          {watching ? '추적 중' : '내 위치'}
         </button>
       </div>
 
