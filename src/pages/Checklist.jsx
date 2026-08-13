@@ -43,7 +43,15 @@ export default function Checklist() {
     <div>
       <div className="top-header">
         <button className="btn-ghost" onClick={() => navigate(`/trip/${tripId}`)}>←</button>
-        <h1>준비물</h1>
+        <h1
+          style={{
+            fontSize: 20,
+            fontWeight: 600,
+            margin: 0,
+          }}
+        >
+          준비물
+        </h1>
         {!isShareMode && (
           <button
             className="btn-ghost"

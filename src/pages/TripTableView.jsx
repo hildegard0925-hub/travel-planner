@@ -170,10 +170,16 @@ export default function TripTableView({
             className="btn-ghost"
             onClick={() => setViewMode('timeline')}
           >
-            ← 타임라인
+            ← 여정
           </button>
 
-          <h1>{trip.title}</h1>
+          <h1 style={{
+            fontSize: 20,
+            fontWeight: 600,
+            margin: 0
+          }}>
+            {trip.title}
+          </h1>
         </div>
 
         <div
@@ -283,10 +289,16 @@ export default function TripTableView({
             className="btn-ghost"
             onClick={() => setViewMode('timeline')}
         >
-            ← 타임라인
+            ← 여정
         </button>
 
-        <h1>{trip.title}</h1>
+        <h1 style={{
+          fontSize: 20,
+          fontWeight: 600,
+          margin: 0
+        }}>
+          {trip.title}
+        </h1>
         </div>
 
         <div style={{ padding: '4px 16px 0' }}>
@@ -307,11 +319,11 @@ export default function TripTableView({
               <col style={{ width: colWidths.date }} />
               <col style={{ width: colWidths.time }} />
               <col style={{ width: colWidths.title }} />
-              <col />   // description
+              <col /> {/* description */}
               <col style={{ width: colWidths.local }} />
               <col style={{ width: colWidths.krw }} />
               <col style={{ width: colWidths.payment }} />
-              <col />   // memo
+              <col />
             </colgroup>
 
             <thead>
@@ -357,11 +369,11 @@ export default function TripTableView({
               <col style={{ width: colWidths.date }} />
               <col style={{ width: colWidths.time }} />
               <col style={{ width: colWidths.title }} />
-              <col />   // description
+              <col /> {/* description */}
               <col style={{ width: colWidths.local }} />
               <col style={{ width: colWidths.krw }} />
               <col style={{ width: colWidths.payment }} />
-              <col />   // memo
+              <col />
             </colgroup>
             <tbody>
 

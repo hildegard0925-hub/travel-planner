@@ -37,7 +37,15 @@ export default function CostSummary() {
     <div>
       <div className="top-header">
         <button className="btn-ghost" onClick={() => navigate(`/trip/${tripId}`)}>←</button>
-        <h1>비용 정산</h1>
+        <h1
+          style={{
+            fontSize: 20,
+            fontWeight: 600,
+            margin: 0,
+          }}
+        >
+          비용 정산
+        </h1>
       </div>
 
       <div style={{ padding: '9px 16px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>

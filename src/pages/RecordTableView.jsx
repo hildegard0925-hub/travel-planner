@@ -169,10 +169,16 @@ export default function TripTableView({
             className="btn-ghost"
             onClick={() => setViewMode('timeline')}
           >
-            ← 타임라인
+            ← 여정
           </button>
 
-          <h1>{trip.title}</h1>
+          <h1 style={{
+            fontSize: 20,
+            fontWeight: 600,
+            margin: 0
+          }}>
+            {trip.title}
+          </h1>
         </div>
 
         <div
@@ -287,10 +293,16 @@ export default function TripTableView({
             className="btn-ghost"
             onClick={() => setViewMode('timeline')}
         >
-            ← 타임라인
+            ← 여정
         </button>
 
-        <h1>{trip.title}</h1>
+        <h1 style={{
+          fontSize: 18,
+          fontWeight: 600,
+          margin: 0
+        }}>
+          {trip.title}
+        </h1>
         </div>
 
         <div style={{ padding: '4px 16px 16px', overflowX: 'auto' }}>

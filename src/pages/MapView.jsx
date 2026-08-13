@@ -126,7 +126,15 @@ export default function MapView() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       <div className="top-header">
         <button className="btn-ghost" onClick={() => navigate(`/trip/${tripId}`)}>←</button>
-        <h1>지도</h1>
+        <h1
+          style={{
+            fontSize: 20,
+            fontWeight: 600,
+            margin: 0,
+          }}
+        >
+          지도
+        </h1>
         <button onClick={watching ? stopWatch : startWatch}
           style={{
             padding: '6px 12px', borderRadius: 999, fontSize: 12,

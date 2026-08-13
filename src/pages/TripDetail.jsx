@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTrip, useTrips } from '../hooks/useTrips.js'
 import { useSchedules } from '../hooks/useSchedules.js'
@@ -67,6 +67,7 @@ export default function TripDetail() {
   const [showEditTrip, setShowEditTrip] = useState(false)
   const [showFontModal, setShowFontModal] = useState(false)
   const [shareCode, setShareCode] = useState('')
+  const titleRef = useRef(null)
 
   const params = new URLSearchParams(location.search)
   const focusDay = params.get('day')
@@ -104,6 +105,36 @@ export default function TripDetail() {
   useEffect(() => {
     localStorage.setItem(storageKey, selectedDay)
   }, [storageKey, selectedDay])
+  useLayoutEffect(() => {
+    const title = titleRef.current
+
+    if (!title) return
+
+    const adjustTitleSize = () => {
+      let fontSize = 18
+
+      title.style.fontSize = `${fontSize}px`
+
+      while (
+        title.scrollWidth > title.clientWidth &&
+        fontSize > 12
+      ) {
+        fontSize -= 0.5
+        title.style.fontSize = `${fontSize}px`
+      }
+    }
+
+    // 화면이 실제로 배치된 뒤 다시 계산
+    requestAnimationFrame(adjustTitleSize)
+
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(adjustTitleSize)
+    })
+
+    observer.observe(title)
+
+    return () => observer.disconnect()
+  }, [trip?.title, viewMode])
 
   if (tripLoading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>로딩 중...</div>
   if (!trip) return null
@@ -144,32 +175,81 @@ export default function TripDetail() {
           flexShrink: 0,
           width: 'auto'
         }}>
-          <button className="btn-ghost" onClick={() => setViewMode('timeline')} style={{ fontSize: 12 }}>타임라인</button>
+          <button className="btn-ghost" onClick={() => setViewMode('timeline')} style={{ fontSize: 12 }}>여정</button>
           <button className="btn-ghost" onClick={() => setViewMode('table')} style={{ fontSize: 12 }}>표</button>
         </div>
         <button className="btn-ghost" onClick={() => {
           const params = window.location.search
           navigate(`/${params}`)
         }}>←</button>
-        <h1 style={{
-          fontSize: 18,
-          fontWeight: 600,
-          margin: 0,
-
-          flex: 1,
-          textAlign: 'center',
-          minWidth: 0
-        }}>
+        <h1
+          ref={titleRef}
+          style={{
+            fontSize: 18,
+            fontWeight: 600,
+            margin: 0,
+            flex: 1,
+            textAlign: 'center',
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+          }}
+        >
           {trip.title}
         </h1>
         {!isShareMode && (
-          <button
-            className="btn-ghost"
-            style={{ fontSize: 18 }}
-            onClick={() => setShowMenu(true)}
-          >
-            ⋯
-          </button>
+          <>
+            <button
+              className="btn-ghost"
+              style={{
+                fontSize: 18,
+                marginRight: -10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onClick={async () => {
+                const country = trip.destination
+                  ?.split(',')
+                  .pop()
+                  .trim()
+
+                const LANGUAGE_TAG = {
+                  '일본': '[일본]',
+                  '대만': '[대만]',
+                }
+
+                const prompt = LANGUAGE_TAG[country] || ''
+
+                if (prompt) {
+                  await navigator.clipboard.writeText(prompt)
+                }
+
+                window.location.href =
+                  'https://chatgpt.com/g/g-p-6a7d52a7cb048191b34dc2fd8fa07f6d-yeohaeng/project'
+              }}
+            >
+              <img
+                src="/paw.png"
+                alt="통역"
+                style={{
+                  width: 20,
+                  height: 20,
+                  objectFit: 'contain',
+                  display: 'block',
+                  transform: 'translateY(1px)',
+                }}
+              />
+            </button>
+
+            <button
+              className="btn-ghost"
+              style={{ fontSize: 18 }}
+              onClick={() => setShowMenu(true)}
+            >
+              ⋯
+            </button>
+          </>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTrip } from '../hooks/useTrips.js'
 import { useRecords } from '../hooks/useRecords.js'
@@ -25,6 +25,7 @@ export default function Records() {
   const { trip } = useTrip(tripId)
   const { records, byDay, loading, addRecord, updateRecord, deleteRecord, refresh } = useRecords(tripId)
   const [viewMode, setViewMode] = useState('timeline')
+  const titleRef = useRef(null)
 
   const [editItem, setEditItem] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -77,6 +78,37 @@ export default function Records() {
       return () => observer.disconnect()
     }, [byDay])
 
+    useLayoutEffect(() => {
+      const title = titleRef.current
+
+      if (!title) return
+
+      const adjustTitleSize = () => {
+        let fontSize = 18
+
+        title.style.fontSize = `${fontSize}px`
+
+        while (
+          title.scrollWidth > title.clientWidth &&
+          fontSize > 12
+        ) {
+          fontSize -= 0.5
+          title.style.fontSize = `${fontSize}px`
+        }
+      }
+
+      // 화면이 실제로 배치된 뒤 다시 계산
+      requestAnimationFrame(adjustTitleSize)
+
+      const observer = new ResizeObserver(() => {
+        requestAnimationFrame(adjustTitleSize)
+      })
+
+      observer.observe(title)
+
+      return () => observer.disconnect()
+    }, [trip?.title, viewMode])
+
     if (!trip) return null
 
   const totalDays = Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
@@ -117,7 +149,7 @@ export default function Records() {
             onClick={() => setViewMode('timeline')}
             style={{ fontSize: 12 }}
           >
-            타임라인
+            여정
           </button>
 
           <button
@@ -141,15 +173,19 @@ export default function Records() {
         </button>
 
         {/* 제목 */}
-        <h1 style={{
-          fontSize: 18,
-          fontWeight: 600,
-          margin: 0,
-
-          flex: 1,
-          textAlign: 'center',
-          minWidth: 0
-        }}>
+        <h1
+          ref={titleRef}
+          style={{
+            fontSize: 18,
+            fontWeight: 600,
+            margin: 0,
+            flex: 1,
+            textAlign: 'center',
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+          }}
+        >
           {trip.title}
         </h1>
 
