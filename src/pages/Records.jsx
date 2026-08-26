@@ -346,7 +346,7 @@ function RecordCard({
   onUpdate,
   onDelete
 }) {
-  console.log('RecordCard 렌더:', record.id, record.photo_id, isShareMode)
+
   const [photoUrl, setPhotoUrl] = useState(null)
   const [photoError, setPhotoError] = useState(false)
   const [viewerUrl, setViewerUrl] = useState(null)
@@ -358,12 +358,6 @@ function RecordCard({
     let objectUrl = null
 
     async function loadPhoto() {
-
-      console.log("사진 로딩:", {
-        isShareMode,
-        shareCode,
-        photoId: record.photo_id
-      })
 
       setPhotoError(false)
 
