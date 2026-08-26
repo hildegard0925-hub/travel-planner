@@ -288,6 +288,11 @@ export default function Records() {
                     record={record}
                     trip={trip}
                     isShareMode={isShareMode}
+                    shareCode={
+                      isShareMode
+                        ? location.pathname.split('/')[2]
+                        : null
+                    }
                     onEdit={() => setEditItem(record)}
                     onUpdate={(id, vals) => updateRecord(id, vals)}
                     onDelete={async () => {
@@ -336,12 +341,17 @@ function RecordCard({
   record,
   trip,
   isShareMode,
+  shareCode,
   onEdit,
   onUpdate,
   onDelete
 }) {
+  console.log('RecordCard 렌더:', record.id, record.photo_id, isShareMode)
   const [photoUrl, setPhotoUrl] = useState(null)
   const [photoError, setPhotoError] = useState(false)
+  const [viewerUrl, setViewerUrl] = useState(null)
+  const [expanded, setExpanded] = useState(false)
+  const [showTimeMenu, setShowTimeMenu] = useState(false)
 
   useEffect(() => {
 
@@ -349,25 +359,68 @@ function RecordCard({
 
     async function loadPhoto() {
 
+      console.log("사진 로딩:", {
+        isShareMode,
+        shareCode,
+        photoId: record.photo_id
+      })
+
       setPhotoError(false)
 
-      if (!record.photo_id) {
-        setPhotoUrl(null)
+      if (!record.photo_id || !expanded) {
         return
       }
 
-      const blob = await getPhoto(record.photo_id)
+      try {
 
-      if (!blob) {
+        // 공유 페이지에서는 Cloudflare R2 사진 사용
+        if (isShareMode) {
+
+          const response = await fetch(
+            `https://jellytravel-share.the-jelly-atelier.workers.dev/share/${shareCode}/photos/${record.photo_id}`
+          )
+
+          console.log("공유 사진 응답:", {
+            status: response.status,
+            contentType: response.headers.get('Content-Type')
+          })
+
+          if (!response.ok) {
+            throw new Error(
+              `공유 사진을 불러오지 못했습니다. (${response.status})`
+            )
+          }
+
+          const blob = await response.blob()
+
+          objectUrl = URL.createObjectURL(blob)
+
+          setPhotoUrl(objectUrl)
+
+          return
+        }
+
+        // 일반 여행 페이지에서는 기존 IndexedDB 사진 사용
+        const blob = await getPhoto(record.photo_id)
+
+        if (!blob) {
+          setPhotoUrl(null)
+          setPhotoError(true)
+          return
+        }
+
+        objectUrl = URL.createObjectURL(blob)
+
+        setPhotoUrl(objectUrl)
+
+      } catch (error) {
+
+        console.error('사진 불러오기 실패:', error)
+
         setPhotoUrl(null)
         setPhotoError(true)
-        return
+
       }
-
-      objectUrl = URL.createObjectURL(blob)
-
-      setPhotoUrl(objectUrl)
-
     }
 
     loadPhoto()
@@ -378,10 +431,8 @@ function RecordCard({
       }
     }
 
-  }, [record.photo_id])
-  const [viewerUrl, setViewerUrl] = useState(null)
-  const [expanded, setExpanded] = useState(false)
-  const [showTimeMenu, setShowTimeMenu] = useState(false)
+  }, [record.photo_id, isShareMode, shareCode, expanded])
+
   const emoji = CAT_EMOJI[record.category] ?? '⭐'
   const costKrw = record.cost_krw > 0 ? `${record.cost_krw.toLocaleString()}원` : null
   const costLocal = record.cost_local > 0 ? `${record.cost_local.toLocaleString()} ${trip.currency}` : null
