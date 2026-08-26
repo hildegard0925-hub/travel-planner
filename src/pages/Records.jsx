@@ -367,35 +367,21 @@ function RecordCard({
 
       setPhotoError(false)
 
+      // 접혀 있거나 사진이 없으면 초기화
       if (!record.photo_id || !expanded) {
+        setPhotoUrl(null)
         return
       }
 
       try {
 
-        // 공유 페이지에서는 Cloudflare R2 사진 사용
+        // 공유 페이지에서는 Cloudflare R2 사진 URL을 직접 사용
         if (isShareMode) {
 
-          const response = await fetch(
+          const url =
             `https://jellytravel-share.the-jelly-atelier.workers.dev/share/${shareCode}/photos/${record.photo_id}`
-          )
 
-          console.log("공유 사진 응답:", {
-            status: response.status,
-            contentType: response.headers.get('Content-Type')
-          })
-
-          if (!response.ok) {
-            throw new Error(
-              `공유 사진을 불러오지 못했습니다. (${response.status})`
-            )
-          }
-
-          const blob = await response.blob()
-
-          objectUrl = URL.createObjectURL(blob)
-
-          setPhotoUrl(objectUrl)
+          setPhotoUrl(url)
 
           return
         }
@@ -486,7 +472,7 @@ function RecordCard({
 
       {/* 사진: 펼쳐졌을 때만 표시 */}
       {expanded && record.photo_id && (
-        !photoUrl || photoError ? (
+        photoError ? (
           <div
             style={{
               padding: '30px 16px',
@@ -496,13 +482,15 @@ function RecordCard({
               borderBottom: '1px solid var(--border)'
             }}
           >
-            🔒 사진은 작성자만 볼 수 있습니다.
+            사진을 불러오지 못했습니다.
           </div>
-        ) : (
+        ) : photoUrl ? (
           <img
             src={photoUrl}
             alt={record.title}
-            onError={() => setPhotoError(true)}
+            onError={() => {
+              setPhotoError(true)
+            }}
             onClick={(e) => {
               e.stopPropagation()
               setViewerUrl(photoUrl)
@@ -515,7 +503,7 @@ function RecordCard({
               cursor: 'zoom-in'
             }}
           />
-        )
+        ) : null
       )}
 
       <div style={{ padding: '5px 12px' }}>
